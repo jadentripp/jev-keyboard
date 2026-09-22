@@ -1,21 +1,24 @@
-"""Generate a sentence with Jev, one character at a time. Standard library only."""
+"""Generate text with Jev, one character at a time."""
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
+from functools import lru_cache
 import getpass
 import json
 import math
 import os
+from queue import LifoQueue
+import re
 import string
 import sys
 from threading import Lock
 import time
-import urllib.error
-import urllib.request
+import requests
 
 ENDPOINT = "https://ai-gateway.vercel.sh/typesafe/v1/systemone"
+WORKERS = 8
 LETTERS = "qwertyuiopasdfghjklzxcvbnm"
-CHARACTERS = LETTERS + LETTERS.upper() + string.digits
+CHARACTERS = LETTERS + LETTERS.upper() + string.digits + "'"
 PUNCTUATION = "`~!@#$%^&*()-_=+[{]}\\|;:'\",<.>/?"
 
 
@@ -31,32 +34,45 @@ def choice(answer, options):
     if answer.get("type") != "choice" or set(probabilities) != set(options) or selected not in options:
         raise ValueError("Invalid model choice")
     values = [probability(p) for p in probabilities.values()]
-    if not math.isclose(sum(values), 1, abs_tol=.02) or probabilities[selected] < max(values) - 1e-6:
+    if not math.isclose(sum(values), 1, abs_tol=.02) or probabilities[selected] < max(values) - .02:
         raise ValueError("Invalid choice distribution")
     return selected, probabilities
 
 
 class Jev:
-    def __init__(self, key, max_cost=.10):
+    def __init__(self, key, max_cost=.10, paragraph=False):
         self.key, self.max_cost = key, max_cost
         self.cost, self.calls = 0., 0
-        self.deadline = time.monotonic() + 1800
+        self.paragraph = paragraph
+        self.deadline = time.monotonic() + (7200 if paragraph else 1800)
         self.lock = Lock()
+        self.clients = LifoQueue()
+        for _ in range(WORKERS):
+            self.clients.put(requests.Session())
 
     def ask(self, state, questions):
         with self.lock:
             if self.cost >= self.max_cost or time.monotonic() >= self.deadline:
                 raise RuntimeError("Cost or time limit reached")
         body = {"model": "typesafe-ai/jev", "state": state, "questions": questions}
-        request = urllib.request.Request(ENDPOINT, json.dumps(body).encode(), headers={
-            "Authorization": "Bearer " + self.key, "Content-Type": "application/json"})
+        client = self.clients.get()
         try:
-            with urllib.request.urlopen(request, timeout=45) as response:
-                data = json.load(response)
-        except urllib.error.HTTPError as error:
-            raise RuntimeError(f"Gateway returned HTTP {error.code}") from None
-        except (urllib.error.URLError, TimeoutError):
+            for attempt in range(7):
+                with self.lock:
+                    if self.cost >= self.max_cost or time.monotonic() >= self.deadline:
+                        raise RuntimeError("Cost or time limit reached")
+                response = client.post(ENDPOINT, json=body, timeout=45,
+                                       headers={"Authorization": "Bearer " + self.key})
+                if response.status_code not in (503, 504, 529) or attempt == 6:
+                    break
+                time.sleep(min(2 ** attempt, 16))
+            if not response.ok:
+                raise RuntimeError(f"Gateway returned HTTP {response.status_code}")
+            data = response.json()
+        except requests.RequestException:
             raise RuntimeError("Network failure; request outcome unknown. No automatic retry.") from None
+        finally:
+            self.clients.put(client)
         cost = float(data["provider_metadata"]["gateway"]["cost"])
         if not math.isfinite(cost) or cost < 0:
             raise ValueError("Invalid cost metadata")
@@ -87,84 +103,166 @@ class Keyboard:
                 return Keyboard(self.draft)
             if len(action) == 1 and action in CHARACTERS:
                 return replace(self, word=self.word + action)
-        elif self.stage == "punctuation":
+        elif self.stage in ("punctuation", "ending"):
+            if self.stage == "ending" and action not in (".", "!", "?"):
+                raise ValueError("Invalid sentence ending")
             if action == "ENTER" or (len(action) == 1 and action in PUNCTUATION):
                 return Keyboard(self.text + ("\n" if action == "ENTER" else action))
         elif self.stage == "route":
             if action == "SPACE":
                 return replace(self, text=self.text + " ")
-            if action in ("WORD", "PUNCTUATION"):
-                return replace(self, stage="word" if action == "WORD" else "punctuation")
+            if action in ("WORD", "PUNCTUATION", "END_SENTENCE"):
+                return replace(self, stage={"WORD": "word", "PUNCTUATION": "punctuation",
+                                           "END_SENTENCE": "ending"}[action])
             if action == "DONE":
                 return self
         raise ValueError("Invalid keyboard action")
 
 
+@lru_cache(maxsize=8192)
 def decide(jev, task, board, min_chars, max_chars):
     if board.stage == "route":
+        paragraph = getattr(jev, "paragraph", False)
+        sentence = re.split(r"(?<=[.!?])\s+", board.text)[-1]
+        sentence_count = len(re.findall(r"[.!?](?=\s|$)", board.text))
+        if paragraph and len(sentence.split()) >= 3 and board.text[-1].isalnum():
+            checks = jev.ask({"sentence": sentence}, {
+                "complete": {"type": "noul", "instructions": "Is the sentence a complete sentence, with a subject and a verb?"},
+                "grammar": {"type": "noul", "instructions": "Is the sentence grammatically acceptable English?"}})
+            complete = probability(checks["complete"]["noul"])
+            grammar = probability(checks["grammar"]["noul"])
+            if complete >= .9 and grammar >= .8:
+                return "END_SENTENCE", {"END_SENTENCE": complete}
         options = {"WORD": "Start spelling the next word.", "SPACE": "Append one space.",
                    "PUNCTUATION": "Select a punctuation character.",
                    "DONE": "The response fully satisfies the task, including its requested format."}
         if not board.text or board.text[-1].isspace():
             options.pop("SPACE")
-        if board.text and board.text[-1].isalnum():
+        if paragraph and board.text.endswith((".", "!", "?")):
+            options.pop("PUNCTUATION")
+        if board.text and (board.text[-1].isalnum() or
+                           (getattr(jev, "paragraph", False) and board.text[-1] in ".!?,;:")):
             options.pop("WORD")
-        if len(board.text) < min_chars or not board.text.rstrip().rstrip('\"\u201d\u2019)').endswith((".", "!", "?")):
+        if (len(board.text) < min_chars or (paragraph and sentence_count < 3)
+                or not board.text.rstrip().rstrip('\"\u201d\u2019)').endswith((".", "!", "?"))):
             options.pop("DONE")
         state = {"task": task, "text": board.text,
                  "length_requirement": {"min_characters": min_chars, "max_characters": max_chars}}
-        return jev.choose(state, "Continue this sentence.", options)
-    if board.stage == "punctuation":
-        options = dict.fromkeys(PUNCTUATION)
-        options["ENTER"] = "Newline"
-        return jev.choose({"task": task, "text": board.text}, "Which punctuation mark?", options)
+        if paragraph:
+            state["completed_sentences"] = sentence_count
+        prompt = "Continue this paragraph." if getattr(jev, "paragraph", False) else "Continue this sentence."
+        return jev.choose(state, prompt, options)
+    if board.stage in ("punctuation", "ending"):
+        options = dict.fromkeys(".!?" if board.stage == "ending" else PUNCTUATION)
+        if getattr(jev, "paragraph", False) and board.stage == "punctuation":
+            for mark in ".!?":
+                options.pop(mark)
+        if board.stage != "ending" and not getattr(jev, "paragraph", False):
+            options["ENTER"] = "Newline"
+        prompt = "Which mark ends this sentence?" if board.stage == "ending" else "Which punctuation mark?"
+        return jev.choose({"task": task, "text": board.text}, prompt, options)
 
-    state = {"answer_so_far": board.draft, "task": task}
+    state = {"answer_so_far": board.draft, "completed_text": board.text,
+             "unfinished_word": board.word, "task": task}
+    sentence = re.split(r"(?<=[.!?])\s+", board.draft)[-1]
     questions = {}
     if board.word:
         questions["word_complete"] = {"type": "noul", "instructions":
-            "Is " + json.dumps(board.word) + " a fully spelled word in a correct answer to the task?"}
+            "Is " + json.dumps(board.word) + " a complete, correctly spelled word?"}
+        questions["grammar"] = {"type": "noul", "instructions":
+            "Do the words agree grammatically? The sentence may continue, but the last word is complete."}
+        if getattr(jev, "paragraph", False):
+            questions["subject"] = {"type": "noul", "instructions":
+                "Does the sentence start with a subject or the beginning of a subject phrase?"}
     kinds = {"lower": "Lowercase letter.", "upper": "Uppercase letter.", "digit": "Digit."}
-    questions["letter_case"] = {"type": "choice",
-        "instructions": "What kind of character comes next in the answer?", "criteria": kinds}
-    answers = jev.ask(state, questions)
-    if board.word and probability(answers["word_complete"]["noul"]) >= .4:
-        return "END_WORD", {}
-    kind, _ = choice(answers["letter_case"], kinds)
+    if not board.word and (not board.text or re.search(r"[.!?]\s+$", board.text)):
+        kinds.pop("lower")
+    answers = jev.ask({"sentence_so_far": sentence, "unfinished_word": board.word}, questions) if questions else {}
+    word_complete = min(probability(answers[k]["noul"]) for k in questions) if board.word else None
+    kind, _ = jev.choose(state, "What kind of character comes next in the answer?", kinds)
     matches = {"lower": str.islower, "upper": str.isupper, "digit": str.isdigit}[kind]
-    characters = {f"key_{i}": char for i, char in enumerate(CHARACTERS) if matches(char)}
-    options = {key: "An answer beginning with " + json.dumps(board.draft + char)
-               for key, char in characters.items()}
-    key, probabilities = jev.choose(state, task, options)
-    return characters[key], {characters[k]: p for k, p in probabilities.items()}
+    characters = {f"key_{i}": char for i, char in enumerate(CHARACTERS) if matches(char) or char == "'"}
+    questions = {}
+    for key, char in characters.items():
+        prefix = json.dumps(board.word + char)
+        questions[key] = {"type": "noul", "instructions":
+            "Is " + json.dumps(sentence + char) +
+            " a likely beginning of a grammatical sentence that adds useful information to the answer? The final word may be unfinished."}
+        questions[key + "_spelling"] = {"type": "noul", "instructions":
+            "Is " + prefix + " the beginning of a correctly spelled word?"}
+    answers = jev.ask(state, questions)
+    if set(answers) != set(questions) or any(answer.get("type") != "noul" for answer in answers.values()):
+        raise ValueError("Invalid character scores")
+    scores = {char: min(probability(answers[k]["noul"]) for k in (key, key + "_spelling"))
+              for key, char in characters.items()}
+    if word_complete is not None:
+        scores["END_WORD"] = word_complete
+    return max(scores, key=scores.get), scores
 
 
 def next_action(jev, task, board, min_chars, max_chars):
     action, probabilities = decide(jev, task, board, min_chars, max_chars)
-    if board.stage != "word" or action == "END_WORD" or probabilities[action] >= .55:
+    sentence_start = len(board.draft) - len(re.split(r"(?<=[.!?])\s+", board.draft)[-1])
+    if action == "DONE":
         return action
-    candidates = sorted(probabilities, key=probabilities.get, reverse=True)[:4]
+    def proposals(scores, width):
+        threshold = max(scores.values()) * .5
+        return [key for key in sorted(scores, key=scores.get, reverse=True)[:width]
+                if scores[key] >= threshold and key != "DONE"]
+    roots = proposals(probabilities, 4 if board.stage == "word" else 2)
+    if len(roots) == 1:
+        return roots[0]
+    def expand(item):
+        root, trial, strength = item
+        future, scores = decide(jev, task, trial, min_chars, max_chars)
+        if future == "DONE":
+            return [(root, trial, min(strength, scores[future]))]
+        futures = proposals(scores, 4 if trial.stage == "word" else 2)
+        results = []
+        for action in futures:
+            updated = trial.apply(action)
+            score = min(strength, scores[action])
+            # Internal stage changes do not consume a character of lookahead.
+            if updated.draft == trial.draft and action != "DONE":
+                results.extend(expand((root, updated, score)))
+            else:
+                results.append((root, updated, score))
+        return results
+    beam = []
+    for root in roots:
+        trial = board.apply(root)
+        item = (root, trial, probabilities[root])
+        beam.extend(expand(item) if trial.draft == board.draft else [item])
+    with ThreadPoolExecutor(max_workers=WORKERS) as pool:
+        for _ in range(5):
+            previews = list(dict.fromkeys(item for group in pool.map(expand, beam) for item in group))
+            best = max(strength for _, _, strength in previews)
+            previews = [item for item in previews if item[2] >= best * .5]
+            if len({root for root, _, _ in previews}) == 1:
+                return previews[0][0]
+            winner, scores = jev.choose({"task": task, "committed_prefix": board.draft},
+                "Which continuation adds relevant information with correct spelling and grammar? The final word may be unfinished.",
+                {str(i): json.dumps(trial.draft[sentence_start:])
+                 for i, (_, trial, _) in enumerate(previews)})
+            selected = previews[int(winner)][0]
+            beam, counts = [], {}
+            for key in sorted(scores, key=lambda key: (scores[key], previews[int(key)][2]), reverse=True):
+                item = previews[int(key)]
+                if counts.get(item[0], 0) < 2:
+                    beam.append(item)
+                    counts[item[0]] = counts.get(item[0], 0) + 1
+    # Reconsider the continuation after committing only the first action.
+    return selected
 
-    def preview(char):
-        trial = board.apply(char)
-        future, _ = decide(jev, task, trial, min_chars, max_chars)
-        return trial.apply(future).draft
 
-    with ThreadPoolExecutor(max_workers=len(candidates)) as pool:
-        previews = list(pool.map(preview, candidates))
-    winner, _ = jev.choose({"task": task, "committed_prefix": board.draft},
-        "Which continuation is most grammatical and relevant to the task?",
-        {str(i): text for i, text in enumerate(previews)})
-    # Commit only the first character; discard the speculative future action.
-    return candidates[int(winner)]
-
-
-def generate(jev, task, min_chars=25, max_chars=50, on_character=lambda char: None):
+def generate(jev, task, min_chars=25, max_chars=50, on_character=lambda char: None, initial_board=None):
     if not 1 <= min_chars <= max_chars:
         raise ValueError("Require 1 <= min_chars <= max_chars")
-    board = Keyboard()
+    if getattr(jev, "paragraph", False):
+        task += " Use short subject-verb sentences. Put the subject before its finite verb."
+    board = initial_board or Keyboard()
     reason = "action_limit"
-    for _ in range(250):
+    for _ in range(max(250, max_chars * 4)):
         if len(board.draft) >= max_chars and board.stage != "route":
             reason = "character_limit"
             break
@@ -189,14 +287,17 @@ def generate(jev, task, min_chars=25, max_chars=50, on_character=lambda char: No
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("question")
-    parser.add_argument("--min-chars", type=int, default=25)
-    parser.add_argument("--max-chars", type=int, default=50)
+    parser.add_argument("--paragraph", action="store_true")
+    parser.add_argument("--min-chars", type=int)
+    parser.add_argument("--max-chars", type=int)
     parser.add_argument("--max-cost", type=float, default=.10)
     args = parser.parse_args()
+    args.min_chars = args.min_chars if args.min_chars is not None else (75 if args.paragraph else 25)
+    args.max_chars = args.max_chars if args.max_chars is not None else (250 if args.paragraph else 50)
     if not 1 <= args.min_chars <= args.max_chars or not math.isfinite(args.max_cost) or args.max_cost <= 0:
         parser.error("Character limits and max cost must be positive and valid")
     key = os.environ.get("AI_GATEWAY_API_KEY") or getpass.getpass("AI Gateway key: ")
-    jev = Jev(key, args.max_cost)
+    jev = Jev(key, args.max_cost, args.paragraph)
     try:
         result = generate(jev, args.question, args.min_chars, args.max_chars,
                           on_character=lambda char: print(char, end="", flush=True))
