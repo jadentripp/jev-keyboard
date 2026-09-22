@@ -1,0 +1,514 @@
+{
+  "date": "2026-09-22",
+  "conclusion": "Longer responses remain incoherent. Only character-by-character modes remain in the active harness.",
+  "recorded_requests": 302,
+  "recorded_questions": 3582,
+  "reported_cost_usd": 0.0,
+  "cost_scope": "Recorded responses only. Failed or interrupted requests may have unknown outcomes; not a claim about total billing.",
+  "whole_word_process": "No active process found when cancellation was retried; partial traces show zero emitted characters in improve-04. Whole-word prototypes are excluded.",
+  "character_append_invariant": "All recorded character-mode actions append zero or one character and preserve the entire previous draft.",
+  "runs": [
+    {
+      "file": "improve-01-explanation.jsonl",
+      "task": "Why does ice float? Answer in one sentence.",
+      "status": "discarded_whole_word_experiment",
+      "summary": {
+        "event": "summary",
+        "text": "because the is a ",
+        "stop_reason": "error",
+        "mode": "lexicon",
+        "completed_words": [
+          "because",
+          "the",
+          "is",
+          "a"
+        ],
+        "completed": false,
+        "steps": 13,
+        "elapsed_seconds": 78.72425829799977,
+        "usage": {
+          "input_tokens": 22972,
+          "output_tokens": 8592
+        },
+        "reported_cost_usd": 0.0,
+        "cost_metadata_complete": true,
+        "error": "Network failure; request outcome unknown. Stopped without retrying."
+      },
+      "last_text": "because the is a ",
+      "recorded_responses": 13
+    },
+    {
+      "file": "improve-01-sentence.jsonl",
+      "task": "What is the capital of France? Answer in a complete sentence.",
+      "status": "discarded_whole_word_experiment",
+      "summary": {
+        "event": "summary",
+        "text": "The is is is is ",
+        "stop_reason": "error",
+        "mode": "lexicon",
+        "completed_words": [
+          "The",
+          "is",
+          "is",
+          "is",
+          "is"
+        ],
+        "completed": false,
+        "steps": 15,
+        "elapsed_seconds": 78.72427876700021,
+        "usage": {
+          "input_tokens": 28859,
+          "output_tokens": 10683
+        },
+        "reported_cost_usd": 0.0,
+        "cost_metadata_complete": true,
+        "error": "Network failure; request outcome unknown. Stopped without retrying."
+      },
+      "last_text": "The is is is is ",
+      "recorded_responses": 15
+    },
+    {
+      "file": "improve-02-probe-explanation.jsonl",
+      "task": null,
+      "status": "discarded_whole_word_experiment",
+      "summary": null,
+      "last_text": null,
+      "recorded_responses": 0
+    },
+    {
+      "file": "improve-02-probe-sentence.jsonl",
+      "task": null,
+      "status": "discarded_whole_word_experiment",
+      "summary": null,
+      "last_text": null,
+      "recorded_responses": 0
+    },
+    {
+      "file": "improve-03-probe-sentence.jsonl",
+      "task": null,
+      "status": "discarded_whole_word_experiment",
+      "summary": null,
+      "last_text": null,
+      "recorded_responses": 9
+    },
+    {
+      "file": "improve-04-explanation.jsonl",
+      "task": "Why does ice float? Answer in one sentence.",
+      "status": "discarded_whole_word_experiment",
+      "summary": null,
+      "last_text": "",
+      "recorded_responses": 1
+    },
+    {
+      "file": "improve-04-sentence.jsonl",
+      "task": "What is the capital of France? Answer in a complete sentence.",
+      "status": "discarded_whole_word_experiment",
+      "summary": null,
+      "last_text": "",
+      "recorded_responses": 1
+    },
+    {
+      "file": "improve-05-character-probes.jsonl",
+      "task": "Why does ice float? Answer in one sentence.",
+      "status": "character_only",
+      "summary": {
+        "event": "summary",
+        "task": "Why does ice float? Answer in one sentence.",
+        "drafts": {
+          "prefix": "A",
+          "continue": "A",
+          "word": "AIAAAAAA",
+          "viable": "a"
+        },
+        "finished": [
+          "continue",
+          "prefix",
+          "viable"
+        ]
+      },
+      "last_text": null,
+      "recorded_responses": 8
+    },
+    {
+      "file": "improve-06-after-a.json",
+      "task": null,
+      "status": "character_only",
+      "summary": null,
+      "last_text": null,
+      "recorded_responses": 1
+    },
+    {
+      "file": "improve-06-start.json",
+      "task": null,
+      "status": "character_only",
+      "summary": null,
+      "last_text": null,
+      "recorded_responses": 1
+    },
+    {
+      "file": "improve-07-explanation.jsonl",
+      "task": "Why does ice float? Answer in one sentence.",
+      "status": "character_only",
+      "summary": {
+        "event": "summary",
+        "text": "a fo X ",
+        "stop_reason": "cancelled",
+        "mode": "scored",
+        "completed_words": [
+          "a",
+          "fo",
+          "X"
+        ],
+        "completed": false,
+        "steps": 13,
+        "elapsed_seconds": 74.42962562799949,
+        "usage": {
+          "input_tokens": 11928,
+          "output_tokens": 7661
+        },
+        "reported_cost_usd": 0.0,
+        "cost_metadata_complete": true,
+        "request_outcome_unknown": false,
+        "error": null
+      },
+      "last_text": "a fo X ",
+      "recorded_responses": 13
+    },
+    {
+      "file": "improve-07-sentence.jsonl",
+      "task": "What is the capital of France? Answer in a complete sentence.",
+      "status": "character_only",
+      "summary": {
+        "event": "summary",
+        "text": "P p r ",
+        "stop_reason": "cancelled",
+        "mode": "scored",
+        "completed_words": [
+          "P",
+          "p",
+          "r"
+        ],
+        "completed": false,
+        "steps": 13,
+        "elapsed_seconds": 74.45398639599989,
+        "usage": {
+          "input_tokens": 10818,
+          "output_tokens": 6640
+        },
+        "reported_cost_usd": 0.0,
+        "cost_metadata_complete": true,
+        "request_outcome_unknown": false,
+        "error": null
+      },
+      "last_text": "P p r ",
+      "recorded_responses": 13
+    },
+    {
+      "file": "improve-08-boundary-probe.json",
+      "task": null,
+      "status": "character_only",
+      "summary": null,
+      "last_text": null,
+      "recorded_responses": 1
+    },
+    {
+      "file": "improve-08-explanation.jsonl",
+      "task": "Why does ice float? Answer in one sentence.",
+      "status": "character_only",
+      "summary": {
+        "event": "summary",
+        "text": "TherewisnonXsYswyP",
+        "stop_reason": "cancelled",
+        "mode": "scored",
+        "completed_words": [],
+        "completed": false,
+        "steps": 19,
+        "elapsed_seconds": 109.98141281000062,
+        "usage": {
+          "input_tokens": 28678,
+          "output_tokens": 19479
+        },
+        "reported_cost_usd": 0.0,
+        "cost_metadata_complete": true,
+        "request_outcome_unknown": false,
+        "error": null
+      },
+      "last_text": "TherewisnonXsYswyP",
+      "recorded_responses": 19
+    },
+    {
+      "file": "improve-08-sentence.jsonl",
+      "task": "What is the capital of France? Answer in a complete sentence.",
+      "status": "character_only",
+      "summary": {
+        "event": "summary",
+        "text": "PrsEnnmCrTonFaPricO",
+        "stop_reason": "cancelled",
+        "mode": "scored",
+        "completed_words": [],
+        "completed": false,
+        "steps": 20,
+        "elapsed_seconds": 109.90997447600057,
+        "usage": {
+          "input_tokens": 31818,
+          "output_tokens": 20561
+        },
+        "reported_cost_usd": 0.0,
+        "cost_metadata_complete": true,
+        "request_outcome_unknown": false,
+        "error": null
+      },
+      "last_text": "PrsEnnmCrTonFaPricO",
+      "recorded_responses": 20
+    },
+    {
+      "file": "longer-01-explanation.jsonl",
+      "task": "Why does ice float? Answer in one sentence.",
+      "status": "character_only",
+      "summary": {
+        "event": "summary",
+        "text": "AAAAAAAAAAAA",
+        "stop_reason": "repetition",
+        "mode": "word",
+        "completed_words": [
+          "A"
+        ],
+        "completed": false,
+        "steps": 15,
+        "elapsed_seconds": 89.51432190100059,
+        "usage": {
+          "input_tokens": 15808,
+          "output_tokens": 6067
+        },
+        "reported_cost_usd": 0.0,
+        "cost_metadata_complete": true,
+        "error": null
+      },
+      "last_text": "AAAAAAAAAAAA",
+      "recorded_responses": 15
+    },
+    {
+      "file": "longer-01-paragraph.jsonl",
+      "task": "Explain how rain forms in three short sentences.",
+      "status": "character_only",
+      "summary": {
+        "event": "summary",
+        "text": "Ran            ",
+        "stop_reason": "repetition",
+        "mode": "word",
+        "completed_words": [
+          "Ran"
+        ],
+        "completed": false,
+        "steps": 17,
+        "elapsed_seconds": 100.8373095650004,
+        "usage": {
+          "input_tokens": 8722,
+          "output_tokens": 2496
+        },
+        "reported_cost_usd": 0.0,
+        "cost_metadata_complete": true,
+        "error": null
+      },
+      "last_text": "Ran            ",
+      "recorded_responses": 17
+    },
+    {
+      "file": "longer-01-sentence.jsonl",
+      "task": "What is the capital of France? Answer in a complete sentence.",
+      "status": "character_only",
+      "summary": {
+        "event": "summary",
+        "text": "AAAAAAAAAAAA",
+        "stop_reason": "repetition",
+        "mode": "word",
+        "completed_words": [
+          "A"
+        ],
+        "completed": false,
+        "steps": 15,
+        "elapsed_seconds": 89.56637256800059,
+        "usage": {
+          "input_tokens": 15853,
+          "output_tokens": 6067
+        },
+        "reported_cost_usd": 0.0,
+        "cost_metadata_complete": true,
+        "error": null
+      },
+      "last_text": "AAAAAAAAAAAA",
+      "recorded_responses": 15
+    },
+    {
+      "file": "longer-02-explanation.jsonl",
+      "task": "Why does ice float? Answer in one sentence.",
+      "status": "character_only",
+      "summary": {
+        "event": "summary",
+        "text": "A AAAAAAAAAAAA",
+        "stop_reason": "repetition",
+        "mode": "word",
+        "completed_words": [
+          "A"
+        ],
+        "completed": false,
+        "steps": 17,
+        "elapsed_seconds": 127.96880545000022,
+        "usage": {
+          "input_tokens": 18314,
+          "output_tokens": 6550
+        },
+        "reported_cost_usd": 0.0,
+        "cost_metadata_complete": true,
+        "error": null
+      },
+      "last_text": "A AAAAAAAAAAAA",
+      "recorded_responses": 17
+    },
+    {
+      "file": "longer-02-paragraph.jsonl",
+      "task": "Explain how rain forms in three short sentences.",
+      "status": "character_only",
+      "summary": {
+        "event": "summary",
+        "text": "Ran R A R RR RRR RRR RRR RRRRRRR RRR",
+        "stop_reason": "error",
+        "mode": "word",
+        "completed_words": [
+          "Ran",
+          "R",
+          "A",
+          "R",
+          "RR",
+          "RRR",
+          "RRR",
+          "RRR",
+          "RRRRRRR"
+        ],
+        "completed": false,
+        "steps": 55,
+        "elapsed_seconds": 391.47260394799923,
+        "usage": {
+          "input_tokens": 62353,
+          "output_tokens": 17318
+        },
+        "reported_cost_usd": 0.0,
+        "cost_metadata_complete": true,
+        "error": "Network failure; request outcome unknown. Stopped without retrying."
+      },
+      "last_text": "Ran R A R RR RRR RRR RRR RRRRRRR RRR",
+      "recorded_responses": 55
+    },
+    {
+      "file": "longer-02-sentence.jsonl",
+      "task": "What is the capital of France? Answer in a complete sentence.",
+      "status": "character_only",
+      "summary": {
+        "event": "summary",
+        "text": "A AAAAAAAAAAAA",
+        "stop_reason": "repetition",
+        "mode": "word",
+        "completed_words": [
+          "A"
+        ],
+        "completed": false,
+        "steps": 17,
+        "elapsed_seconds": 122.44667929299976,
+        "usage": {
+          "input_tokens": 18365,
+          "output_tokens": 6550
+        },
+        "reported_cost_usd": 0.0,
+        "cost_metadata_complete": true,
+        "error": null
+      },
+      "last_text": "A AAAAAAAAAAAA",
+      "recorded_responses": 17
+    },
+    {
+      "file": "longer-03-multiword-capital.jsonl",
+      "task": "What is the capital of Argentina?",
+      "status": "character_only",
+      "summary": {
+        "event": "summary",
+        "text": "CABA",
+        "stop_reason": "done",
+        "mode": "word",
+        "completed_words": [
+          "CABA"
+        ],
+        "completed": true,
+        "steps": 7,
+        "elapsed_seconds": 44.28852743800053,
+        "usage": {
+          "input_tokens": 6202,
+          "output_tokens": 2374
+        },
+        "reported_cost_usd": 0.0,
+        "cost_metadata_complete": true,
+        "error": null
+      },
+      "last_text": "CABA",
+      "recorded_responses": 7
+    },
+    {
+      "file": "longer-03-multiword-name.jsonl",
+      "task": "Who wrote Pride and Prejudice?",
+      "status": "character_only",
+      "summary": {
+        "event": "summary",
+        "text": "JaNe JaNe AAAAAAAAAAAA",
+        "stop_reason": "repetition",
+        "mode": "word",
+        "completed_words": [
+          "JaNe",
+          "JaNe"
+        ],
+        "completed": false,
+        "steps": 27,
+        "elapsed_seconds": 208.44837531200028,
+        "usage": {
+          "input_tokens": 31023,
+          "output_tokens": 10311
+        },
+        "reported_cost_usd": 0.0,
+        "cost_metadata_complete": true,
+        "error": null
+      },
+      "last_text": "JaNe JaNe AAAAAAAAAAAA",
+      "recorded_responses": 27
+    },
+    {
+      "file": "longer-04-plain-explanation.jsonl",
+      "task": "Why does ice float?",
+      "status": "character_only",
+      "summary": {
+        "event": "summary",
+        "text": "A AAAAAAAAAAAA",
+        "stop_reason": "repetition",
+        "mode": "word",
+        "completed_words": [
+          "A"
+        ],
+        "completed": false,
+        "steps": 17,
+        "elapsed_seconds": 139.234286592,
+        "usage": {
+          "input_tokens": 18229,
+          "output_tokens": 6550
+        },
+        "reported_cost_usd": 0.0,
+        "cost_metadata_complete": true,
+        "error": null
+      },
+      "last_text": "A AAAAAAAAAAAA",
+      "recorded_responses": 17
+    }
+  ],
+  "later_sentence_milestone": {
+    "report": "sentence-goal-results.json",
+    "text": "Paris is a capital of france.",
+    "characters": 29,
+    "known_issue": "The country name france is lowercase. The output is preserved verbatim."
+  }
+}

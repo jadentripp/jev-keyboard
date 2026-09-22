@@ -1,0 +1,46 @@
+{
+  "request": {
+    "model": "typesafe-ai/jev",
+    "state": {
+      "task": "What is the capital of France? Answer in a complete sentence."
+    },
+    "questions": {
+      "first": {
+        "type": "noul",
+        "instructions": "Is \"P\" a fully spelled word in a correct answer to the task?"
+      },
+      "partial": {
+        "type": "noul",
+        "instructions": "Is \"Pa\" a fully spelled word in a correct answer to the task?"
+      }
+    }
+  },
+  "response": {
+    "model": "typesafe-ai/jev",
+    "answers": {
+      "first": {
+        "type": "noul",
+        "noul": 0.11
+      },
+      "partial": {
+        "type": "noul",
+        "noul": 0.11
+      }
+    },
+    "usage": {
+      "input_tokens": 324,
+      "output_tokens": 36
+    },
+    "provider_metadata": {
+      "typesafe": {
+        "confidence": {}
+      },
+      "gateway": {
+        "cost": "0",
+        "marketCost": "0.000013608",
+        "surchargeCost": "0",
+        "gatewayCost": "0"
+      }
+    }
+  }
+}

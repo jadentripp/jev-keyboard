@@ -1,0 +1,50 @@
+{
+  "request": {
+    "model": "typesafe-ai/jev",
+    "state": {
+      "task": "What is the capital of France? Answer in a complete sentence.",
+      "committed_prefix": "Paris is a capital o"
+    },
+    "questions": {
+      "case": {
+        "type": "choice",
+        "instructions": "Which capitalization is correct?",
+        "criteria": {
+          "lower": "Paris is a capital of",
+          "upper": "Paris is a capital oF"
+        }
+      }
+    }
+  },
+  "response": {
+    "model": "typesafe-ai/jev",
+    "answers": {
+      "case": {
+        "type": "choice",
+        "choice": "lower",
+        "confidence": 0.98,
+        "probabilities": {
+          "lower": 0.99,
+          "upper": 0.01
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 350,
+      "output_tokens": 31
+    },
+    "provider_metadata": {
+      "typesafe": {
+        "confidence": {
+          "case": 0.98
+        }
+      },
+      "gateway": {
+        "cost": "0",
+        "marketCost": "0.0000147",
+        "surchargeCost": "0",
+        "gatewayCost": "0"
+      }
+    }
+  }
+}

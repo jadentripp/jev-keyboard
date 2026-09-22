@@ -1,0 +1,167 @@
+[
+  {
+    "request": {
+      "model": "typesafe-ai/jev",
+      "state": {
+        "answer_so_far": "A",
+        "task": "What color is a clear daytime sky? Answer in one complete sentence of 25 to 50 characters, including spaces and punctuation."
+      },
+      "questions": {
+        "0": {
+          "type": "noul",
+          "instructions": "Is the spelling of the last word complete?"
+        },
+        "1": {
+          "type": "noul",
+          "instructions": "Can a space follow this text without interrupting a word?"
+        },
+        "2": {
+          "type": "noul",
+          "instructions": "Is the last word a complete English word?"
+        }
+      }
+    },
+    "response": {
+      "model": "typesafe-ai/jev",
+      "answers": {
+        "0": {
+          "type": "noul",
+          "noul": 0.5
+        },
+        "1": {
+          "type": "noul",
+          "noul": 0.74
+        },
+        "2": {
+          "type": "noul",
+          "noul": 0.62
+        }
+      },
+      "usage": {
+        "input_tokens": 355,
+        "output_tokens": 52
+      },
+      "provider_metadata": {
+        "typesafe": {
+          "confidence": {}
+        },
+        "gateway": {
+          "cost": "0",
+          "marketCost": "0.00001491",
+          "surchargeCost": "0",
+          "gatewayCost": "0"
+        }
+      }
+    }
+  },
+  {
+    "request": {
+      "model": "typesafe-ai/jev",
+      "state": {
+        "answer_so_far": "Pari",
+        "task": "What is the capital of France? Answer in one complete sentence of 25 to 50 characters, including spaces and punctuation."
+      },
+      "questions": {
+        "0": {
+          "type": "noul",
+          "instructions": "Is the spelling of the last word complete?"
+        },
+        "1": {
+          "type": "noul",
+          "instructions": "Can a space follow this text without interrupting a word?"
+        },
+        "2": {
+          "type": "noul",
+          "instructions": "Is the last word a complete English word?"
+        }
+      }
+    },
+    "response": {
+      "model": "typesafe-ai/jev",
+      "answers": {
+        "0": {
+          "type": "noul",
+          "noul": 0.64
+        },
+        "1": {
+          "type": "noul",
+          "noul": 0.78
+        },
+        "2": {
+          "type": "noul",
+          "noul": 0.75
+        }
+      },
+      "usage": {
+        "input_tokens": 355,
+        "output_tokens": 52
+      },
+      "provider_metadata": {
+        "typesafe": {
+          "confidence": {}
+        },
+        "gateway": {
+          "cost": "0",
+          "marketCost": "0.00001491",
+          "surchargeCost": "0",
+          "gatewayCost": "0"
+        }
+      }
+    }
+  },
+  {
+    "request": {
+      "model": "typesafe-ai/jev",
+      "state": {
+        "answer_so_far": "Paris",
+        "task": "What is the capital of France? Answer in one complete sentence of 25 to 50 characters, including spaces and punctuation."
+      },
+      "questions": {
+        "0": {
+          "type": "noul",
+          "instructions": "Is the spelling of the last word complete?"
+        },
+        "1": {
+          "type": "noul",
+          "instructions": "Can a space follow this text without interrupting a word?"
+        },
+        "2": {
+          "type": "noul",
+          "instructions": "Is the last word a complete English word?"
+        }
+      }
+    },
+    "response": {
+      "model": "typesafe-ai/jev",
+      "answers": {
+        "0": {
+          "type": "noul",
+          "noul": 0.87
+        },
+        "1": {
+          "type": "noul",
+          "noul": 0.75
+        },
+        "2": {
+          "type": "noul",
+          "noul": 0.91
+        }
+      },
+      "usage": {
+        "input_tokens": 354,
+        "output_tokens": 52
+      },
+      "provider_metadata": {
+        "typesafe": {
+          "confidence": {}
+        },
+        "gateway": {
+          "cost": "0",
+          "marketCost": "0.000014868",
+          "surchargeCost": "0",
+          "gatewayCost": "0"
+        }
+      }
+    }
+  }
+]

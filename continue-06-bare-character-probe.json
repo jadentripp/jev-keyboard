@@ -1,0 +1,204 @@
+{
+  "request": {
+    "model": "typesafe-ai/jev",
+    "state": {
+      "question": "Why does ice float? Answer in one sentence.",
+      "answer_so_far": ""
+    },
+    "questions": {
+      "letters": {
+        "type": "choice",
+        "instructions": "Which letter comes next? Ignore case.",
+        "criteria": {
+          "a": null,
+          "b": null,
+          "c": null,
+          "d": null,
+          "e": null,
+          "f": null,
+          "g": null,
+          "h": null,
+          "i": null,
+          "j": null,
+          "k": null,
+          "l": null,
+          "m": null,
+          "n": null,
+          "o": null,
+          "p": null,
+          "q": null,
+          "r": null,
+          "s": null,
+          "t": null,
+          "u": null,
+          "v": null,
+          "w": null,
+          "x": null,
+          "y": null,
+          "z": null
+        }
+      },
+      "neutral": {
+        "type": "choice",
+        "instructions": "Which letter comes next? Ignore case.",
+        "criteria": {
+          "key_0": "a",
+          "key_1": "b",
+          "key_2": "c",
+          "key_3": "d",
+          "key_4": "e",
+          "key_5": "f",
+          "key_6": "g",
+          "key_7": "h",
+          "key_8": "i",
+          "key_9": "j",
+          "key_10": "k",
+          "key_11": "l",
+          "key_12": "m",
+          "key_13": "n",
+          "key_14": "o",
+          "key_15": "p",
+          "key_16": "q",
+          "key_17": "r",
+          "key_18": "s",
+          "key_19": "t",
+          "key_20": "u",
+          "key_21": "v",
+          "key_22": "w",
+          "key_23": "x",
+          "key_24": "y",
+          "key_25": "z"
+        }
+      },
+      "group": {
+        "type": "choice",
+        "instructions": "Which group contains the next letter of the answer?",
+        "criteria": {
+          "group_1": "a b c d e f",
+          "group_2": "g h i j k l",
+          "group_3": "m n o p q r",
+          "group_4": "s t u v w x y z"
+        }
+      },
+      "case": {
+        "type": "choice",
+        "instructions": "Should the next letter be uppercase or lowercase?",
+        "criteria": {
+          "upper": null,
+          "lower": null
+        }
+      }
+    }
+  },
+  "response": {
+    "model": "typesafe-ai/jev",
+    "answers": {
+      "letters": {
+        "type": "choice",
+        "choice": "a",
+        "confidence": 0.35,
+        "probabilities": {
+          "j": 0.01,
+          "b": 0.05,
+          "v": 0.01,
+          "e": 0.04,
+          "c": 0.02,
+          "k": 0.01,
+          "h": 0.01,
+          "i": 0.13,
+          "x": 0.01,
+          "s": 0.02,
+          "w": 0.02,
+          "u": 0.01,
+          "p": 0.03,
+          "t": 0.01,
+          "m": 0.01,
+          "z": 0.01,
+          "r": 0.01,
+          "q": 0.01,
+          "d": 0.03,
+          "g": 0.01,
+          "n": 0.02,
+          "o": 0.03,
+          "f": 0.06999999999999999,
+          "l": 0.02,
+          "y": 0.01,
+          "a": 0.39
+        }
+      },
+      "neutral": {
+        "type": "choice",
+        "choice": "key_0",
+        "confidence": 0.37,
+        "probabilities": {
+          "key_8": 0.08,
+          "key_10": 0.01,
+          "key_17": 0.01,
+          "key_21": 0.01,
+          "key_7": 0.01,
+          "key_0": 0.38,
+          "key_19": 0.01,
+          "key_22": 0.01,
+          "key_9": 0.01,
+          "key_14": 0.02,
+          "key_20": 0.01,
+          "key_23": 0.01,
+          "key_25": 0.01,
+          "key_1": 0.1,
+          "key_6": 0.01,
+          "key_5": 0.09000000000000001,
+          "key_2": 0.05,
+          "key_18": 0.02,
+          "key_11": 0.03,
+          "key_24": 0.01,
+          "key_12": 0.01,
+          "key_16": 0,
+          "key_4": 0.05,
+          "key_13": 0.01,
+          "key_15": 0.02,
+          "key_3": 0.02
+        }
+      },
+      "group": {
+        "type": "choice",
+        "choice": "group_1",
+        "confidence": 0.53,
+        "probabilities": {
+          "group_1": 0.65,
+          "group_3": 0.06,
+          "group_2": 0.22,
+          "group_4": 0.07
+        }
+      },
+      "case": {
+        "type": "choice",
+        "choice": "upper",
+        "confidence": 0.31,
+        "probabilities": {
+          "upper": 0.66,
+          "lower": 0.34
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 1001,
+      "output_tokens": 545
+    },
+    "provider_metadata": {
+      "typesafe": {
+        "confidence": {
+          "letters": 0.35,
+          "neutral": 0.37,
+          "group": 0.53,
+          "case": 0.31
+        }
+      },
+      "gateway": {
+        "cost": "0",
+        "marketCost": "0.000042042",
+        "surchargeCost": "0",
+        "gatewayCost": "0"
+      }
+    }
+  }
+}

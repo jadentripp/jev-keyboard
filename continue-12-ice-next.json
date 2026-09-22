@@ -1,0 +1,569 @@
+{
+  "request": {
+    "model": "typesafe-ai/jev",
+    "state": {
+      "answer_so_far": "Ice "
+    },
+    "questions": {
+      "object": {
+        "type": "choice",
+        "instructions": "Why does ice float? Answer in one sentence.",
+        "criteria": {
+          "key_0": {
+            "answer_starts_with": "Ice q"
+          },
+          "key_1": {
+            "answer_starts_with": "Ice w"
+          },
+          "key_2": {
+            "answer_starts_with": "Ice e"
+          },
+          "key_3": {
+            "answer_starts_with": "Ice r"
+          },
+          "key_4": {
+            "answer_starts_with": "Ice t"
+          },
+          "key_5": {
+            "answer_starts_with": "Ice y"
+          },
+          "key_6": {
+            "answer_starts_with": "Ice u"
+          },
+          "key_7": {
+            "answer_starts_with": "Ice i"
+          },
+          "key_8": {
+            "answer_starts_with": "Ice o"
+          },
+          "key_9": {
+            "answer_starts_with": "Ice p"
+          },
+          "key_10": {
+            "answer_starts_with": "Ice a"
+          },
+          "key_11": {
+            "answer_starts_with": "Ice s"
+          },
+          "key_12": {
+            "answer_starts_with": "Ice d"
+          },
+          "key_13": {
+            "answer_starts_with": "Ice f"
+          },
+          "key_14": {
+            "answer_starts_with": "Ice g"
+          },
+          "key_15": {
+            "answer_starts_with": "Ice h"
+          },
+          "key_16": {
+            "answer_starts_with": "Ice j"
+          },
+          "key_17": {
+            "answer_starts_with": "Ice k"
+          },
+          "key_18": {
+            "answer_starts_with": "Ice l"
+          },
+          "key_19": {
+            "answer_starts_with": "Ice z"
+          },
+          "key_20": {
+            "answer_starts_with": "Ice x"
+          },
+          "key_21": {
+            "answer_starts_with": "Ice c"
+          },
+          "key_22": {
+            "answer_starts_with": "Ice v"
+          },
+          "key_23": {
+            "answer_starts_with": "Ice b"
+          },
+          "key_24": {
+            "answer_starts_with": "Ice n"
+          },
+          "key_25": {
+            "answer_starts_with": "Ice m"
+          },
+          "key_26": {
+            "answer_starts_with": "Ice Q"
+          },
+          "key_27": {
+            "answer_starts_with": "Ice W"
+          },
+          "key_28": {
+            "answer_starts_with": "Ice E"
+          },
+          "key_29": {
+            "answer_starts_with": "Ice R"
+          },
+          "key_30": {
+            "answer_starts_with": "Ice T"
+          },
+          "key_31": {
+            "answer_starts_with": "Ice Y"
+          },
+          "key_32": {
+            "answer_starts_with": "Ice U"
+          },
+          "key_33": {
+            "answer_starts_with": "Ice I"
+          },
+          "key_34": {
+            "answer_starts_with": "Ice O"
+          },
+          "key_35": {
+            "answer_starts_with": "Ice P"
+          },
+          "key_36": {
+            "answer_starts_with": "Ice A"
+          },
+          "key_37": {
+            "answer_starts_with": "Ice S"
+          },
+          "key_38": {
+            "answer_starts_with": "Ice D"
+          },
+          "key_39": {
+            "answer_starts_with": "Ice F"
+          },
+          "key_40": {
+            "answer_starts_with": "Ice G"
+          },
+          "key_41": {
+            "answer_starts_with": "Ice H"
+          },
+          "key_42": {
+            "answer_starts_with": "Ice J"
+          },
+          "key_43": {
+            "answer_starts_with": "Ice K"
+          },
+          "key_44": {
+            "answer_starts_with": "Ice L"
+          },
+          "key_45": {
+            "answer_starts_with": "Ice Z"
+          },
+          "key_46": {
+            "answer_starts_with": "Ice X"
+          },
+          "key_47": {
+            "answer_starts_with": "Ice C"
+          },
+          "key_48": {
+            "answer_starts_with": "Ice V"
+          },
+          "key_49": {
+            "answer_starts_with": "Ice B"
+          },
+          "key_50": {
+            "answer_starts_with": "Ice N"
+          },
+          "key_51": {
+            "answer_starts_with": "Ice M"
+          },
+          "key_52": {
+            "answer_starts_with": "Ice 0"
+          },
+          "key_53": {
+            "answer_starts_with": "Ice 1"
+          },
+          "key_54": {
+            "answer_starts_with": "Ice 2"
+          },
+          "key_55": {
+            "answer_starts_with": "Ice 3"
+          },
+          "key_56": {
+            "answer_starts_with": "Ice 4"
+          },
+          "key_57": {
+            "answer_starts_with": "Ice 5"
+          },
+          "key_58": {
+            "answer_starts_with": "Ice 6"
+          },
+          "key_59": {
+            "answer_starts_with": "Ice 7"
+          },
+          "key_60": {
+            "answer_starts_with": "Ice 8"
+          },
+          "key_61": {
+            "answer_starts_with": "Ice 9"
+          }
+        }
+      },
+      "description": {
+        "type": "choice",
+        "instructions": "Why does ice float? Answer in one sentence.",
+        "criteria": {
+          "key_0": "An answer beginning with \"Ice q\"",
+          "key_1": "An answer beginning with \"Ice w\"",
+          "key_2": "An answer beginning with \"Ice e\"",
+          "key_3": "An answer beginning with \"Ice r\"",
+          "key_4": "An answer beginning with \"Ice t\"",
+          "key_5": "An answer beginning with \"Ice y\"",
+          "key_6": "An answer beginning with \"Ice u\"",
+          "key_7": "An answer beginning with \"Ice i\"",
+          "key_8": "An answer beginning with \"Ice o\"",
+          "key_9": "An answer beginning with \"Ice p\"",
+          "key_10": "An answer beginning with \"Ice a\"",
+          "key_11": "An answer beginning with \"Ice s\"",
+          "key_12": "An answer beginning with \"Ice d\"",
+          "key_13": "An answer beginning with \"Ice f\"",
+          "key_14": "An answer beginning with \"Ice g\"",
+          "key_15": "An answer beginning with \"Ice h\"",
+          "key_16": "An answer beginning with \"Ice j\"",
+          "key_17": "An answer beginning with \"Ice k\"",
+          "key_18": "An answer beginning with \"Ice l\"",
+          "key_19": "An answer beginning with \"Ice z\"",
+          "key_20": "An answer beginning with \"Ice x\"",
+          "key_21": "An answer beginning with \"Ice c\"",
+          "key_22": "An answer beginning with \"Ice v\"",
+          "key_23": "An answer beginning with \"Ice b\"",
+          "key_24": "An answer beginning with \"Ice n\"",
+          "key_25": "An answer beginning with \"Ice m\"",
+          "key_26": "An answer beginning with \"Ice Q\"",
+          "key_27": "An answer beginning with \"Ice W\"",
+          "key_28": "An answer beginning with \"Ice E\"",
+          "key_29": "An answer beginning with \"Ice R\"",
+          "key_30": "An answer beginning with \"Ice T\"",
+          "key_31": "An answer beginning with \"Ice Y\"",
+          "key_32": "An answer beginning with \"Ice U\"",
+          "key_33": "An answer beginning with \"Ice I\"",
+          "key_34": "An answer beginning with \"Ice O\"",
+          "key_35": "An answer beginning with \"Ice P\"",
+          "key_36": "An answer beginning with \"Ice A\"",
+          "key_37": "An answer beginning with \"Ice S\"",
+          "key_38": "An answer beginning with \"Ice D\"",
+          "key_39": "An answer beginning with \"Ice F\"",
+          "key_40": "An answer beginning with \"Ice G\"",
+          "key_41": "An answer beginning with \"Ice H\"",
+          "key_42": "An answer beginning with \"Ice J\"",
+          "key_43": "An answer beginning with \"Ice K\"",
+          "key_44": "An answer beginning with \"Ice L\"",
+          "key_45": "An answer beginning with \"Ice Z\"",
+          "key_46": "An answer beginning with \"Ice X\"",
+          "key_47": "An answer beginning with \"Ice C\"",
+          "key_48": "An answer beginning with \"Ice V\"",
+          "key_49": "An answer beginning with \"Ice B\"",
+          "key_50": "An answer beginning with \"Ice N\"",
+          "key_51": "An answer beginning with \"Ice M\"",
+          "key_52": "An answer beginning with \"Ice 0\"",
+          "key_53": "An answer beginning with \"Ice 1\"",
+          "key_54": "An answer beginning with \"Ice 2\"",
+          "key_55": "An answer beginning with \"Ice 3\"",
+          "key_56": "An answer beginning with \"Ice 4\"",
+          "key_57": "An answer beginning with \"Ice 5\"",
+          "key_58": "An answer beginning with \"Ice 6\"",
+          "key_59": "An answer beginning with \"Ice 7\"",
+          "key_60": "An answer beginning with \"Ice 8\"",
+          "key_61": "An answer beginning with \"Ice 9\""
+        }
+      },
+      "question": {
+        "type": "choice",
+        "instructions": "Why does ice float? Answer in one sentence. Which prefix can begin your answer?",
+        "criteria": {
+          "Ice q": null,
+          "Ice w": null,
+          "Ice e": null,
+          "Ice r": null,
+          "Ice t": null,
+          "Ice y": null,
+          "Ice u": null,
+          "Ice i": null,
+          "Ice o": null,
+          "Ice p": null,
+          "Ice a": null,
+          "Ice s": null,
+          "Ice d": null,
+          "Ice f": null,
+          "Ice g": null,
+          "Ice h": null,
+          "Ice j": null,
+          "Ice k": null,
+          "Ice l": null,
+          "Ice z": null,
+          "Ice x": null,
+          "Ice c": null,
+          "Ice v": null,
+          "Ice b": null,
+          "Ice n": null,
+          "Ice m": null,
+          "Ice Q": null,
+          "Ice W": null,
+          "Ice E": null,
+          "Ice R": null,
+          "Ice T": null,
+          "Ice Y": null,
+          "Ice U": null,
+          "Ice I": null,
+          "Ice O": null,
+          "Ice P": null,
+          "Ice A": null,
+          "Ice S": null,
+          "Ice D": null,
+          "Ice F": null,
+          "Ice G": null,
+          "Ice H": null,
+          "Ice J": null,
+          "Ice K": null,
+          "Ice L": null,
+          "Ice Z": null,
+          "Ice X": null,
+          "Ice C": null,
+          "Ice V": null,
+          "Ice B": null,
+          "Ice N": null,
+          "Ice M": null,
+          "Ice 0": null,
+          "Ice 1": null,
+          "Ice 2": null,
+          "Ice 3": null,
+          "Ice 4": null,
+          "Ice 5": null,
+          "Ice 6": null,
+          "Ice 7": null,
+          "Ice 8": null,
+          "Ice 9": null
+        }
+      }
+    }
+  },
+  "response": {
+    "model": "typesafe-ai/jev",
+    "answers": {
+      "object": {
+        "type": "choice",
+        "choice": "key_10",
+        "confidence": 0.1,
+        "probabilities": {
+          "key_25": 0.01,
+          "key_43": 0,
+          "key_5": 0,
+          "key_26": 0,
+          "key_22": 0,
+          "key_60": 0,
+          "key_36": 0.11,
+          "key_4": 0.08,
+          "key_7": 0.02,
+          "key_2": 0.02,
+          "key_41": 0.01,
+          "key_57": 0,
+          "key_53": 0.01,
+          "key_27": 0.01,
+          "key_23": 0.04,
+          "key_61": 0,
+          "key_11": 0.05,
+          "key_16": 0,
+          "key_45": 0,
+          "key_50": 0.01,
+          "key_13": 0.09,
+          "key_55": 0.01,
+          "key_47": 0.02,
+          "key_3": 0,
+          "key_29": 0,
+          "key_21": 0.01,
+          "key_48": 0,
+          "key_39": 0.04,
+          "key_32": 0,
+          "key_40": 0.01,
+          "key_28": 0,
+          "key_56": 0.01,
+          "key_19": 0,
+          "key_6": 0.01,
+          "key_42": 0,
+          "key_44": 0,
+          "key_24": 0.01,
+          "key_33": 0.04,
+          "key_14": 0,
+          "key_1": 0.02,
+          "key_18": 0.02,
+          "key_35": 0,
+          "key_15": 0.01,
+          "key_17": 0,
+          "key_59": 0,
+          "key_37": 0.02,
+          "key_52": 0.01,
+          "key_9": 0.01,
+          "key_46": 0,
+          "key_12": 0.02,
+          "key_10": 0.12,
+          "key_30": 0.02,
+          "key_38": 0.03,
+          "key_34": 0.01,
+          "key_51": 0,
+          "key_31": 0,
+          "key_20": 0,
+          "key_8": 0.02,
+          "key_49": 0.01,
+          "key_54": 0.01,
+          "key_0": 0.04,
+          "key_58": 0
+        }
+      },
+      "description": {
+        "type": "choice",
+        "choice": "key_7",
+        "confidence": 0.11,
+        "probabilities": {
+          "key_25": 0,
+          "key_43": 0,
+          "key_5": 0,
+          "key_22": 0.01,
+          "key_26": 0,
+          "key_60": 0,
+          "key_36": 0.08,
+          "key_4": 0.08,
+          "key_2": 0.02,
+          "key_7": 0.13,
+          "key_41": 0,
+          "key_57": 0,
+          "key_53": 0.01,
+          "key_61": 0,
+          "key_23": 0.02,
+          "key_27": 0,
+          "key_11": 0.02,
+          "key_45": 0,
+          "key_16": 0,
+          "key_50": 0.01,
+          "key_13": 0.09999999999999999,
+          "key_55": 0.01,
+          "key_47": 0.02,
+          "key_3": 0,
+          "key_21": 0.02,
+          "key_29": 0,
+          "key_48": 0,
+          "key_39": 0.06,
+          "key_32": 0,
+          "key_40": 0,
+          "key_28": 0,
+          "key_56": 0.01,
+          "key_19": 0,
+          "key_6": 0.01,
+          "key_42": 0,
+          "key_44": 0,
+          "key_24": 0.01,
+          "key_14": 0,
+          "key_33": 0.12,
+          "key_1": 0.01,
+          "key_18": 0.01,
+          "key_35": 0.01,
+          "key_15": 0,
+          "key_37": 0.01,
+          "key_59": 0,
+          "key_17": 0,
+          "key_52": 0.01,
+          "key_9": 0.01,
+          "key_46": 0,
+          "key_12": 0.01,
+          "key_10": 0.09,
+          "key_30": 0.01,
+          "key_38": 0.05,
+          "key_34": 0,
+          "key_51": 0,
+          "key_31": 0,
+          "key_20": 0,
+          "key_8": 0.01,
+          "key_54": 0.01,
+          "key_0": 0.01,
+          "key_49": 0,
+          "key_58": 0
+        }
+      },
+      "question": {
+        "type": "choice",
+        "choice": "Ice I",
+        "confidence": 0.32,
+        "probabilities": {
+          "Ice C": 0.02,
+          "Ice w": 0.01,
+          "Ice p": 0,
+          "Ice M": 0.01,
+          "Ice 2": 0.01,
+          "Ice B": 0,
+          "Ice D": 0.01,
+          "Ice P": 0.01,
+          "Ice S": 0.02,
+          "Ice U": 0,
+          "Ice N": 0.01,
+          "Ice h": 0.01,
+          "Ice b": 0.01,
+          "Ice Y": 0.01,
+          "Ice r": 0,
+          "Ice v": 0,
+          "Ice a": 0.05,
+          "Ice i": 0.01,
+          "Ice c": 0.01,
+          "Ice H": 0.01,
+          "Ice q": 0.02,
+          "Ice 1": 0.03,
+          "Ice 8": 0,
+          "Ice R": 0,
+          "Ice Q": 0.01,
+          "Ice J": 0,
+          "Ice V": 0,
+          "Ice 3": 0,
+          "Ice t": 0.02,
+          "Ice A": 0.19,
+          "Ice g": 0,
+          "Ice f": 0.01,
+          "Ice W": 0.02,
+          "Ice 5": 0,
+          "Ice 6": 0,
+          "Ice E": 0.01,
+          "Ice z": 0,
+          "Ice F": 0.04,
+          "Ice L": 0,
+          "Ice 0": 0.01,
+          "Ice x": 0,
+          "Ice T": 0.01,
+          "Ice X": 0,
+          "Ice s": 0.01,
+          "Ice u": 0.01,
+          "Ice l": 0,
+          "Ice d": 0,
+          "Ice j": 0,
+          "Ice 9": 0,
+          "Ice G": 0.01,
+          "Ice K": 0,
+          "Ice o": 0.01,
+          "Ice m": 0,
+          "Ice y": 0,
+          "Ice Z": 0,
+          "Ice e": 0.01,
+          "Ice 7": 0,
+          "Ice O": 0.01,
+          "Ice 4": 0.01,
+          "Ice I": 0.34,
+          "Ice n": 0.01,
+          "Ice k": 0
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 3709,
+      "output_tokens": 1777
+    },
+    "provider_metadata": {
+      "typesafe": {
+        "confidence": {
+          "object": 0.1,
+          "description": 0.11,
+          "question": 0.32
+        }
+      },
+      "gateway": {
+        "cost": "0",
+        "marketCost": "0.000155778",
+        "surchargeCost": "0",
+        "gatewayCost": "0"
+      }
+    }
+  }
+}

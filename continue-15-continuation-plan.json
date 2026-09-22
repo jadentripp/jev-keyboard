@@ -1,0 +1,359 @@
+[
+  {
+    "request": {
+      "model": "typesafe-ai/jev",
+      "state": {
+        "task": "What is the capital of France? Answer in a complete sentence.",
+        "answer_so_far": "Paris ",
+        "word_number": 2,
+        "current_word": ""
+      },
+      "questions": {
+        "next_key": {
+          "type": "choice",
+          "instructions": "What part of speech should the next word be?",
+          "criteria": {
+            "common noun": null,
+            "proper noun": null,
+            "verb": null,
+            "adjective": null,
+            "adverb": null,
+            "pronoun": null,
+            "determiner": null,
+            "preposition": null,
+            "conjunction": null,
+            "interjection": null,
+            "number": null
+          }
+        }
+      }
+    },
+    "response": {
+      "model": "typesafe-ai/jev",
+      "answers": {
+        "next_key": {
+          "type": "choice",
+          "choice": "verb",
+          "confidence": 0.84,
+          "probabilities": {
+            "common noun": 0.07,
+            "adverb": 0.01,
+            "proper noun": 0.02,
+            "conjunction": 0.01,
+            "preposition": 0.01,
+            "determiner": 0.01,
+            "verb": 0.86,
+            "number": 0,
+            "interjection": 0,
+            "adjective": 0.01,
+            "pronoun": 0
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 407,
+        "output_tokens": 111
+      },
+      "provider_metadata": {
+        "typesafe": {
+          "confidence": {
+            "next_key": 0.84
+          }
+        },
+        "gateway": {
+          "cost": "0",
+          "marketCost": "0.000017094",
+          "surchargeCost": "0",
+          "gatewayCost": "0"
+        }
+      }
+    }
+  },
+  {
+    "request": {
+      "model": "typesafe-ai/jev",
+      "state": {
+        "task": "What is the capital of France? Answer in a complete sentence.",
+        "answer_so_far": "Paris ",
+        "word_number": 2,
+        "current_word": "",
+        "part_of_speech": "verb"
+      },
+      "questions": {
+        "next_key": {
+          "type": "choice",
+          "instructions": "How many characters are in the next word?",
+          "criteria": {
+            "1": null,
+            "2": null,
+            "3": null,
+            "4": null,
+            "5": null,
+            "6": null,
+            "7": null,
+            "8": null,
+            "9": null,
+            "10": null,
+            "11": null,
+            "12": null,
+            "13": null,
+            "14": null,
+            "15": null,
+            "16": null,
+            "17": null,
+            "18": null,
+            "19": null,
+            "20": null,
+            "21": null,
+            "22": null,
+            "23": null,
+            "24": null,
+            "25": null,
+            "26": null,
+            "27": null,
+            "28": null,
+            "29": null,
+            "30": null,
+            "31": null,
+            "32": null
+          }
+        }
+      }
+    },
+    "response": {
+      "model": "typesafe-ai/jev",
+      "answers": {
+        "next_key": {
+          "type": "choice",
+          "choice": "4",
+          "confidence": 0.16,
+          "probabilities": {
+            "1": 0.17,
+            "2": 0.04,
+            "3": 0.13,
+            "4": 0.18,
+            "5": 0.11,
+            "6": 0.09,
+            "7": 0.05,
+            "8": 0.04,
+            "9": 0.04,
+            "10": 0.02,
+            "11": 0.01,
+            "12": 0.01,
+            "13": 0.01,
+            "14": 0.01,
+            "15": 0.01,
+            "16": 0,
+            "17": 0.01,
+            "18": 0.01,
+            "19": 0.01,
+            "20": 0,
+            "21": 0,
+            "22": 0.01,
+            "23": 0.01,
+            "24": 0.01,
+            "25": 0,
+            "26": 0,
+            "27": 0,
+            "28": 0.01,
+            "29": 0.01,
+            "30": 0,
+            "31": 0,
+            "32": 0
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 551,
+        "output_tokens": 265
+      },
+      "provider_metadata": {
+        "typesafe": {
+          "confidence": {
+            "next_key": 0.16
+          }
+        },
+        "gateway": {
+          "cost": "0",
+          "marketCost": "0.000023142",
+          "surchargeCost": "0",
+          "gatewayCost": "0"
+        }
+      }
+    }
+  },
+  {
+    "request": {
+      "model": "typesafe-ai/jev",
+      "state": {
+        "task": "What is the capital of France? Answer in a complete sentence.",
+        "answer_so_far": "Paris ",
+        "word_number": 2,
+        "current_word": "",
+        "part_of_speech": "verb",
+        "word_length": 4
+      },
+      "questions": {
+        "next_key": {
+          "type": "choice",
+          "instructions": "What is letter 1 of word 2 of the answer?",
+          "criteria": {
+            "q": null,
+            "w": null,
+            "e": null,
+            "r": null,
+            "t": null,
+            "y": null,
+            "u": null,
+            "i": null,
+            "o": null,
+            "p": null,
+            "a": null,
+            "s": null,
+            "d": null,
+            "f": null,
+            "g": null,
+            "h": null,
+            "j": null,
+            "k": null,
+            "l": null,
+            "z": null,
+            "x": null,
+            "c": null,
+            "v": null,
+            "b": null,
+            "n": null,
+            "m": null,
+            "Q": null,
+            "W": null,
+            "E": null,
+            "R": null,
+            "T": null,
+            "Y": null,
+            "U": null,
+            "I": null,
+            "O": null,
+            "P": null,
+            "A": null,
+            "S": null,
+            "D": null,
+            "F": null,
+            "G": null,
+            "H": null,
+            "J": null,
+            "K": null,
+            "L": null,
+            "Z": null,
+            "X": null,
+            "C": null,
+            "V": null,
+            "B": null,
+            "N": null,
+            "M": null,
+            "0": null,
+            "1": null,
+            "2": null,
+            "3": null,
+            "4": null,
+            "5": null,
+            "6": null,
+            "7": null,
+            "8": null,
+            "9": null
+          }
+        }
+      }
+    },
+    "response": {
+      "model": "typesafe-ai/jev",
+      "answers": {
+        "next_key": {
+          "type": "choice",
+          "choice": "P",
+          "confidence": 0.51,
+          "probabilities": {
+            "0": 0,
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "5": 0,
+            "6": 0,
+            "7": 0,
+            "8": 0,
+            "9": 0,
+            "o": 0,
+            "v": 0,
+            "l": 0,
+            "z": 0,
+            "K": 0,
+            "b": 0,
+            "u": 0,
+            "L": 0,
+            "V": 0,
+            "f": 0,
+            "w": 0,
+            "I": 0.01,
+            "T": 0.01,
+            "M": 0,
+            "S": 0.04,
+            "P": 0.53,
+            "D": 0,
+            "y": 0,
+            "X": 0,
+            "k": 0,
+            "n": 0,
+            "r": 0.02,
+            "C": 0.01,
+            "g": 0,
+            "m": 0,
+            "A": 0.11,
+            "c": 0,
+            "G": 0,
+            "R": 0.02,
+            "e": 0,
+            "s": 0.03,
+            "i": 0.01,
+            "q": 0,
+            "B": 0.01,
+            "j": 0,
+            "Z": 0,
+            "x": 0,
+            "p": 0.06999999999999999,
+            "F": 0.01,
+            "d": 0.01,
+            "W": 0,
+            "N": 0,
+            "H": 0.01,
+            "U": 0,
+            "t": 0,
+            "h": 0,
+            "Y": 0,
+            "J": 0,
+            "O": 0,
+            "E": 0,
+            "a": 0.09,
+            "Q": 0
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 719,
+        "output_tokens": 452
+      },
+      "provider_metadata": {
+        "typesafe": {
+          "confidence": {
+            "next_key": 0.51
+          }
+        },
+        "gateway": {
+          "cost": "0",
+          "marketCost": "0.000030198",
+          "surchargeCost": "0",
+          "gatewayCost": "0"
+        }
+      }
+    }
+  }
+]

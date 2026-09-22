@@ -1,0 +1,56 @@
+{
+  "request": {
+    "model": "typesafe-ai/jev",
+    "state": {
+      "task": "Why does ice float? Answer in one sentence.",
+      "text": "It",
+      "current_word": "It"
+    },
+    "questions": {
+      "finished": {
+        "type": "noul",
+        "instructions": "Is the last word finished?"
+      },
+      "boundary": {
+        "type": "noul",
+        "instructions": "Does the current word need more letters before a space?"
+      },
+      "fluent": {
+        "type": "noul",
+        "instructions": "Should a word boundary occur here in a fluent response to the task?"
+      }
+    }
+  },
+  "response": {
+    "model": "typesafe-ai/jev",
+    "answers": {
+      "finished": {
+        "type": "noul",
+        "noul": 0.21
+      },
+      "boundary": {
+        "type": "noul",
+        "noul": 0.63
+      },
+      "fluent": {
+        "type": "noul",
+        "noul": 0.66
+      }
+    },
+    "usage": {
+      "input_tokens": 344,
+      "output_tokens": 53
+    },
+    "provider_metadata": {
+      "typesafe": {
+        "confidence": {}
+      },
+      "gateway": {
+        "cost": "0",
+        "marketCost": "0.000014448",
+        "surchargeCost": "0",
+        "gatewayCost": "0"
+      }
+    }
+  }
+}

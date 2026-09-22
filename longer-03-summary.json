@@ -1,0 +1,49 @@
+{
+  "wall_seconds": 208.4527824809993,
+  "boundary_rules": true,
+  "results": [
+    {
+      "event": "summary",
+      "text": "CABA",
+      "stop_reason": "done",
+      "mode": "word",
+      "completed_words": [
+        "CABA"
+      ],
+      "completed": true,
+      "steps": 7,
+      "elapsed_seconds": 44.28852743800053,
+      "usage": {
+        "input_tokens": 6202,
+        "output_tokens": 2374
+      },
+      "reported_cost_usd": 0.0,
+      "cost_metadata_complete": true,
+      "error": null,
+      "case": "multiword-capital",
+      "prompt": "What is the capital of Argentina?"
+    },
+    {
+      "event": "summary",
+      "text": "JaNe JaNe AAAAAAAAAAAA",
+      "stop_reason": "repetition",
+      "mode": "word",
+      "completed_words": [
+        "JaNe",
+        "JaNe"
+      ],
+      "completed": false,
+      "steps": 27,
+      "elapsed_seconds": 208.44837531200028,
+      "usage": {
+        "input_tokens": 31023,
+        "output_tokens": 10311
+      },
+      "reported_cost_usd": 0.0,
+      "cost_metadata_complete": true,
+      "error": null,
+      "case": "multiword-name",
+      "prompt": "Who wrote Pride and Prejudice?"
+    }
+  ]
+}

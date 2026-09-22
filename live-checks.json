@@ -1,0 +1,172 @@
+{
+  "date": "2026-09-22",
+  "model": "typesafe-ai/jev",
+  "live_model_outputs": [],
+  "checks": [
+    {
+      "endpoint": "https://ai-gateway.vercel.sh/typesafe/v1/systemone",
+      "request_kind": "QWERTY Choice prediction from empty draft",
+      "http_status": 402,
+      "error_type": "insufficient_funds",
+      "message": "A positive credit balance is required for all requests, including BYOK, so fallback providers remain available."
+    },
+    {
+      "endpoint": "https://ai-gateway.vercel.sh/v1/evaluate",
+      "request_kind": "boolean greeting evaluation to check access through newer endpoint",
+      "http_status": 402,
+      "error_type": "insufficient_funds",
+      "message": "A positive credit balance is required for all requests, including BYOK, so fallback providers remain available."
+    }
+  ],
+  "local_tests": {
+    "passed": 16,
+    "failed": 0,
+    "uses_live_model": false
+  },
+  "writing_quality": "Complete 29-character sentence generated with one capitalization error; general reliability unproven.",
+  "gateway_access": "Succeeded after credit was added",
+  "append_only_run": {
+    "event": "summary",
+    "text": "Q            ",
+    "stop_reason": "repetition",
+    "completed": false,
+    "steps": 13,
+    "elapsed_seconds": 70.13672501600013,
+    "usage": {
+      "input_tokens": 13751,
+      "output_tokens": 9009
+    },
+    "reported_cost_usd": 0.0,
+    "cost_metadata_complete": true,
+    "error": null
+  },
+  "keyboard_choices": 97,
+  "staged_word_run": {
+    "event": "summary",
+    "text": "Qaaaaaaaaaaaa",
+    "stop_reason": "repetition",
+    "mode": "word",
+    "completed_words": [
+      "Qaaaaaaaa"
+    ],
+    "completed": false,
+    "steps": 16,
+    "elapsed_seconds": 93.7496552850007,
+    "usage": {
+      "input_tokens": 27220,
+      "output_tokens": 6527
+    },
+    "reported_cost_usd": 0.0,
+    "cost_metadata_complete": true,
+    "error": null
+  },
+  "default_mode": "word",
+  "word_stage_probe_answers": {
+    "opening": "A",
+    "simple": "A",
+    "continue_h": "i",
+    "continue_wh": "i",
+    "complete_what": "END_WORD"
+  },
+  "simple_prompt_run": {
+    "event": "summary",
+    "text": "Qaaaaaaaaaaaa",
+    "stop_reason": "repetition",
+    "mode": "word",
+    "completed_words": [
+      "Qaaaaaaaa",
+      "aaa"
+    ],
+    "completed": false,
+    "steps": 18,
+    "elapsed_seconds": 99.370909665,
+    "usage": {
+      "input_tokens": 11320,
+      "output_tokens": 7031
+    },
+    "reported_cost_usd": 0.0,
+    "cost_metadata_complete": true,
+    "error": null
+  },
+  "choice_order_controls": {
+    "open_qwerty": {
+      "choice": "W",
+      "probability": 0.18000000000000002
+    },
+    "control_qwerty": {
+      "choice": "z",
+      "probability": 0.8200000000000001
+    },
+    "open_reversed": {
+      "choice": "Q",
+      "probability": 0.31
+    },
+    "control_reversed": {
+      "choice": "Z",
+      "probability": 0.65
+    },
+    "open_alphabetical": {
+      "choice": "Q",
+      "probability": 0.25
+    },
+    "control_alphabetical": {
+      "choice": "Z",
+      "probability": 0.68
+    },
+    "open_shuffled": {
+      "choice": "A",
+      "probability": 0.18000000000000002
+    },
+    "control_shuffled": {
+      "choice": "z",
+      "probability": 0.84
+    },
+    "literal": {
+      "choice": "z",
+      "probability": 0.93
+    },
+    "semantic": {
+      "choice": "zebra",
+      "probability": 1
+    }
+  },
+  "prefix_choice_run": {
+    "event": "summary",
+    "text": "Paris",
+    "stop_reason": "done",
+    "mode": "word",
+    "completed_words": [
+      "Paris"
+    ],
+    "completed": true,
+    "steps": 8,
+    "elapsed_seconds": 47.73914204900029,
+    "usage": {
+      "input_tokens": 7407,
+      "output_tokens": 2855
+    },
+    "reported_cost_usd": 0.0,
+    "cost_metadata_complete": true,
+    "error": null
+  },
+  "default_word_prompt": "Which is the correct next prefix of the answer?",
+  "longer_response_report": "longer-response-results.json",
+  "character_only": true,
+  "discarded_whole_word_generation": true,
+  "sentence_goal_report": "sentence-goal-results.json",
+  "sentence_goal": {
+    "trace": "continue-21-sentence.jsonl",
+    "task": "What is the capital of France? Answer in a complete sentence.",
+    "text": "Paris is a capital of france.",
+    "characters": 29,
+    "character_appends": 29,
+    "actions": 43,
+    "append_only_one_character": true,
+    "started_empty": true,
+    "length_ok": true,
+    "ends_with_sentence_punctuation": true,
+    "model_selected_done": true,
+    "semantic_correctness": "Requires independent review; these checks do not establish it."
+  },
+  "sentence_goal_known_issue": "The country name france is lowercase. The output is preserved verbatim."
+}
