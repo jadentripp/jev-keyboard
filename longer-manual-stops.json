@@ -1,6 +1,0 @@
-{
-  "action": "Sent interrupt to remaining baseline test process after incoherent output",
-  "process_exit_code": 130,
-  "affected_trace": "longer-02-paragraph.jsonl",
-  "in_flight_request_status": "Unknown for interrupted request; summaries count recorded responses only."
-}

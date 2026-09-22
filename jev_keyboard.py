@@ -1,399 +1,212 @@
-#!/usr/bin/env python3
-"""Experimental character generation using Jev Choice predictions. Python 3.10+."""
-from __future__ import annotations
-
+"""Generate a sentence with Jev, one character at a time. Standard library only."""
 import argparse
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, replace
 import getpass
 import json
 import math
 import os
-from pathlib import Path
+import string
 import sys
+from threading import Lock
 import time
 import urllib.error
 import urllib.request
 
 ENDPOINT = "https://ai-gateway.vercel.sh/typesafe/v1/systemone"
-MODEL = "typesafe-ai/jev"
-ROWS = ("qwertyuiop", "asdfghjkl", "zxcvbnm")
-CHARS = "".join(ROWS) + "".join(ROWS).upper() + "0123456789" + "`~!@#$%^&*()-_=+[{]}\\|;:'\",<.>/?"
-KEYS = {c: None for c in CHARS}
-KEYS.update({
-    "SPACE": "Append one space character.",
-    "ENTER": "Append one newline character.",
-    "DONE": "Finish: the response is complete and needs no more text.",
-})
+LETTERS = "qwertyuiopasdfghjklzxcvbnm"
+CHARACTERS = LETTERS + LETTERS.upper() + string.digits
+PUNCTUATION = "`~!@#$%^&*()-_=+[{]}\\|;:'\",<.>/?"
 
 
-class GatewayError(RuntimeError):
-    pass
+def probability(value):
+    if not isinstance(value, (int, float)) or not math.isfinite(value) or not 0 <= value <= 1:
+        raise ValueError("Invalid model probability")
+    return value
 
 
-def request_body(task: str, draft: str) -> dict:
-    return {
-        "model": MODEL,
-        "state": {"task": task, "draft": draft},
-        "questions": {
-            "next_key": {
-                "type": "choice",
-                "instructions": "Next character? Choose DONE when finished.",
-                "criteria": KEYS,
-            }
-        },
-    }
-
-
-def apply_key(draft: str, key: str) -> tuple[str, bool]:
-    if key not in KEYS:
-        raise ValueError("Jev returned an unknown keyboard action")
-    if key == "DONE":
-        return draft, True
-    return draft + {"SPACE": " ", "ENTER": "\n"}.get(key, key), False
-
-
-def parse_answer(response: dict, criteria: dict | None = None) -> dict:
-    criteria = KEYS if criteria is None else criteria
-    answer = response["answers"]["next_key"]
+def choice(answer, options):
     probabilities = answer["probabilities"]
-    if answer.get("type") != "choice" or answer.get("choice") not in criteria:
-        raise ValueError("Invalid Choice answer")
-    if set(probabilities) != set(criteria):
-        raise ValueError("Incomplete keyboard probability distribution")
-    if any(not isinstance(p, (int, float)) or not math.isfinite(p) or not 0 <= p <= 1
-           for p in probabilities.values()):
-        raise ValueError("Invalid probability")
-    if not math.isclose(sum(probabilities.values()), 1, abs_tol=0.02):
-        raise ValueError("Keyboard probabilities do not sum to one")
-    if probabilities[answer["choice"]] + 1e-6 < max(probabilities.values()):
-        raise ValueError("Selected key disagrees with probability distribution")
-    return answer
+    selected = answer["choice"]
+    if answer.get("type") != "choice" or set(probabilities) != set(options) or selected not in options:
+        raise ValueError("Invalid model choice")
+    values = [probability(p) for p in probabilities.values()]
+    if not math.isclose(sum(values), 1, abs_tol=.02) or probabilities[selected] < max(values) - 1e-6:
+        raise ValueError("Invalid choice distribution")
+    return selected, probabilities
 
 
-class WordKeyboard:
-    """Route each text unit, then spell its word or select its punctuation."""
+class Jev:
+    def __init__(self, key, max_cost=.10):
+        self.key, self.max_cost = key, max_cost
+        self.cost, self.calls = 0., 0
+        self.deadline = time.monotonic() + 1800
+        self.lock = Lock()
 
-    def __init__(self):
-        self.stage = "route"
-        self.text = ""
-        self.word = ""
-        self.completed_words = []
+    def ask(self, state, questions):
+        with self.lock:
+            if self.cost >= self.max_cost or time.monotonic() >= self.deadline:
+                raise RuntimeError("Cost or time limit reached")
+        body = {"model": "typesafe-ai/jev", "state": state, "questions": questions}
+        request = urllib.request.Request(ENDPOINT, json.dumps(body).encode(), headers={
+            "Authorization": "Bearer " + self.key, "Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(request, timeout=45) as response:
+                data = json.load(response)
+        except urllib.error.HTTPError as error:
+            raise RuntimeError(f"Gateway returned HTTP {error.code}") from None
+        except (urllib.error.URLError, TimeoutError):
+            raise RuntimeError("Network failure; request outcome unknown. No automatic retry.") from None
+        cost = float(data["provider_metadata"]["gateway"]["cost"])
+        if not math.isfinite(cost) or cost < 0:
+            raise ValueError("Invalid cost metadata")
+        with self.lock:
+            self.calls += 1
+            self.cost += cost
+        return data["answers"]
+
+    def choose(self, state, prompt, options):
+        answer = self.ask(state, {"next_key": {
+            "type": "choice", "instructions": prompt, "criteria": options}})["next_key"]
+        return choice(answer, options)
+
+
+@dataclass(frozen=True)
+class Keyboard:
+    text: str = ""
+    word: str = ""
+    stage: str = "route"
 
     @property
     def draft(self):
         return self.text + self.word
 
-    def body(self, task):
-        if self.stage == "route":
-            instructions = "What comes next in the response?"
-            criteria = {k: None for k in ("WORD", "SPACE", "PUNCTUATION", "DONE")}
-            if not self.text:
-                criteria.pop("SPACE")
-                criteria.pop("DONE")
-            else:
-                if self.text[-1].isspace():
-                    criteria.pop("SPACE")
-                if self.text[-1].isalnum():
-                    criteria.pop("WORD")
-        elif self.stage == "word":
-            instructions = "Which is the correct next prefix of the answer?"
-            criteria = {c: self.draft + c for c in CHARS if c.isalnum()}
-            if self.word:
-                criteria["END_WORD"] = self.draft + " (complete word)"
-        else:
-            instructions = "Which punctuation mark?"
-            criteria = {c: None for c in CHARS if not c.isalnum()}
-            criteria["ENTER"] = "Newline"
-        state = {"task": task, "text": self.text}
-        if self.stage == "word":
-            state["current_word"] = self.word
-        return {
-            "model": MODEL,
-            "state": state,
-            "questions": {"next_key": {"type": "choice", "instructions": instructions,
-                                       "criteria": criteria}},
-        }
-
     def apply(self, action):
-        if action not in self.body("")["questions"]["next_key"]["criteria"]:
-            raise ValueError("Invalid action for current stage")
-        if self.stage == "route":
-            if action == "DONE":
-                return True
+        if self.stage == "word":
+            if action == "END_WORD" and self.word:
+                return Keyboard(self.draft)
+            if len(action) == 1 and action in CHARACTERS:
+                return replace(self, word=self.word + action)
+        elif self.stage == "punctuation":
+            if action == "ENTER" or (len(action) == 1 and action in PUNCTUATION):
+                return Keyboard(self.text + ("\n" if action == "ENTER" else action))
+        elif self.stage == "route":
             if action == "SPACE":
-                self.text += " "
-            else:
-                self.stage = "word" if action == "WORD" else "punctuation"
-        elif self.stage == "word":
-            if action == "END_WORD":
-                self.completed_words.append(self.word)
-                self.text += self.word
-                self.word = ""
-                self.stage = "route"
-            else:
-                self.word += action
-        else:
-            self.text += "\n" if action == "ENTER" else action
-            self.stage = "route"
-        return False
+                return replace(self, text=self.text + " ")
+            if action in ("WORD", "PUNCTUATION"):
+                return replace(self, stage="word" if action == "WORD" else "punctuation")
+            if action == "DONE":
+                return self
+        raise ValueError("Invalid keyboard action")
 
 
-def evaluate(body: dict, api_key: str, timeout: float = 45) -> dict:
-    req = urllib.request.Request(ENDPOINT, json.dumps(body).encode(), headers={
-        "Authorization": "Bearer " + api_key, "Content-Type": "application/json",
-    })
-    for attempt in range(4):
-        try:
-            with urllib.request.urlopen(req, timeout=timeout) as response:
-                return json.load(response)
-        except urllib.error.HTTPError as error:
-            # Never print request headers or potentially echoed request bodies.
-            if error.code == 402:
-                raise GatewayError("AI Gateway requires a positive credit balance (HTTP 402).") from None
-            if error.code in (401, 403):
-                raise GatewayError(f"AI Gateway rejected credentials/access (HTTP {error.code}).") from None
-            if error.code in (429, 500, 502, 503, 504, 529) and attempt < 3:
-                retry = error.headers.get("Retry-After", "")
-                delay = float(retry) if retry.isdigit() else 2 ** attempt
-                if delay > 60:
-                    raise GatewayError("Gateway requested a retry after more than 60 seconds; stopped.") from None
-                time.sleep(delay)
-                continue
-            raise GatewayError(f"AI Gateway request failed (HTTP {error.code}).") from None
-        except (urllib.error.URLError, TimeoutError):
-            # Do not automatically retry unknown outcomes that may have been billed.
-            raise GatewayError("Network failure; request outcome unknown. Stopped without retrying.") from None
-    raise GatewayError("Retry limit reached")
+def decide(jev, task, board, min_chars, max_chars):
+    if board.stage == "route":
+        options = {"WORD": "Start spelling the next word.", "SPACE": "Append one space.",
+                   "PUNCTUATION": "Select a punctuation character.",
+                   "DONE": "The response fully satisfies the task, including its requested format."}
+        if not board.text or board.text[-1].isspace():
+            options.pop("SPACE")
+        if board.text and board.text[-1].isalnum():
+            options.pop("WORD")
+        if len(board.text) < min_chars or not board.text.rstrip().rstrip('\"\u201d\u2019)').endswith((".", "!", "?")):
+            options.pop("DONE")
+        state = {"task": task, "text": board.text,
+                 "length_requirement": {"min_characters": min_chars, "max_characters": max_chars}}
+        return jev.choose(state, "Continue this sentence.", options)
+    if board.stage == "punctuation":
+        options = dict.fromkeys(PUNCTUATION)
+        options["ENTER"] = "Newline"
+        return jev.choose({"task": task, "text": board.text}, "Which punctuation mark?", options)
+
+    state = {"answer_so_far": board.draft, "task": task}
+    questions = {}
+    if board.word:
+        questions["word_complete"] = {"type": "noul", "instructions":
+            "Is " + json.dumps(board.word) + " a fully spelled word in a correct answer to the task?"}
+    kinds = {"lower": "Lowercase letter.", "upper": "Uppercase letter.", "digit": "Digit."}
+    questions["letter_case"] = {"type": "choice",
+        "instructions": "What kind of character comes next in the answer?", "criteria": kinds}
+    answers = jev.ask(state, questions)
+    if board.word and probability(answers["word_complete"]["noul"]) >= .4:
+        return "END_WORD", {}
+    kind, _ = choice(answers["letter_case"], kinds)
+    matches = {"lower": str.islower, "upper": str.isupper, "digit": str.isdigit}[kind]
+    characters = {f"key_{i}": char for i, char in enumerate(CHARACTERS) if matches(char)}
+    options = {key: "An answer beginning with " + json.dumps(board.draft + char)
+               for key, char in characters.items()}
+    key, probabilities = jev.choose(state, task, options)
+    return characters[key], {characters[k]: p for k, p in probabilities.items()}
 
 
-def generate(task: str, api_key: str, trace_path: Path, *, max_steps: int = 1500,
-             max_seconds: float = 1800, max_cost: float = 0.25,
-             call=evaluate, on_change=None, mode="word", stop_file: Path | None = None,
-             resume_trace: Path | None = None) -> dict:
-    if max_steps < 1 or max_seconds <= 0 or max_cost <= 0:
-        raise ValueError("Step, time and cost limits must be positive")
-    draft = ""
-    if mode not in ("word", "character", "scored", "planned", "direct", "boundary"):
-        raise ValueError("Unknown mode")
-    if mode == "boundary":
-        from direct_keyboard import BoundaryKeyboard
-        keyboard = BoundaryKeyboard()
-    elif mode == "direct":
-        from direct_keyboard import DirectKeyboard
-        keyboard = DirectKeyboard()
-    elif mode == "planned":
-        from planned_keyboard import PlannedKeyboard
-        keyboard = PlannedKeyboard()
-    else:
-        keyboard = WordKeyboard() if mode in ("word", "scored") else None
-    if resume_trace is not None:
-        seen_sources = set()
-        def replay(path):
-            nonlocal draft
-            path = Path(path).resolve()
-            if path in seen_sources:
-                raise ValueError("Cycle in resume trace chain")
-            seen_sources.add(path)
-            rows = [json.loads(line) for line in path.read_text().splitlines()]
-            start = rows[0]
-            if start.get("event") != "start" or start.get("task") != task or start.get("mode") != mode:
-                raise ValueError("Resume trace task or mode differs")
-            if start.get("resume_source"):
-                replay(path.parent / start["resume_source"])
-            if draft != start.get("initial_draft", ""):
-                raise ValueError("Resume trace initial draft differs")
-            for row in rows:
-                if row.get("event") != "key":
-                    continue
-                if row["before"] != draft:
-                    raise ValueError("Resume trace is discontinuous")
-                action = row.get("selection", row["response"]["answers"].get("next_key", {}))["choice"]
-                if keyboard:
-                    keyboard.body(task)
-                    keyboard.apply(action)
-                    draft = keyboard.draft
-                else:
-                    draft, _ = apply_key(draft, action)
-                if draft != row["after"]:
-                    raise ValueError("Resume action differs from recorded text")
-        replay(resume_trace)
-    started = time.monotonic()
-    usage = {"input_tokens": 0, "output_tokens": 0}
-    known_cost = 0.0
-    cost_complete = True
-    visits = {draft: 1}
-    reason = "max_steps"
-    count = 0
-    error_message = None
-    request_outcome_unknown = False
-    trace_path.parent.mkdir(parents=True, exist_ok=True)
-    # Exclusive creation prevents accidental destruction of previous evidence.
-    with trace_path.open("x", encoding="utf-8") as log:
-        def record(event):
-            log.write(json.dumps(event, ensure_ascii=False) + "\n")
-            log.flush()
-        record({"event": "start", "model": MODEL, "task": task,
-                "keyboard": KEYS if keyboard is None else "staged_word_keyboard",
-                "mode": mode, "initial_draft": draft,
-                "resume_source": os.path.relpath(resume_trace, trace_path.parent) if resume_trace else None,
-                "max_steps": max_steps,
-                "max_seconds": max_seconds, "max_cost_usd": max_cost})
-        for step in range(max_steps):
-            if stop_file is not None and stop_file.exists():
-                reason = "cancelled"
-                break
-            if time.monotonic() - started >= max_seconds:
-                reason = "max_seconds"
-                break
-            before = draft
-            tick = time.monotonic()
-            body = keyboard.body(task) if keyboard else request_body(task, draft)
-            score_actions = None
-            if mode == "scored" and keyboard.stage == "word":
-                score_actions = list(body["questions"]["next_key"]["criteria"])
-                body = {"model": MODEL, "state": {"task": task}, "questions": {
-                    str(i): {"type": "noul", "instructions": "Could " + json.dumps(
-                        draft + (" " if action == "END_WORD" else action)) +
-                        " naturally begin a correct answer?"}
-                    for i, action in enumerate(score_actions)}}
-                if keyboard.word:
-                    body["questions"]["word_complete"] = {
-                        "type": "noul", "instructions": "Is " + json.dumps(keyboard.word) +
-                        " a fully spelled word in a correct answer to the task?"}
-            try:
-                response = call(body, api_key)
-                if score_actions is None:
-                    answer = parse_answer(response, body["questions"]["next_key"]["criteria"])
-                    if hasattr(keyboard, "select_answer"):
-                        answer = keyboard.select_answer(answer, response)
-                else:
-                    scores = {action: response["answers"][str(i)]["noul"]
-                              for i, action in enumerate(score_actions)}
-                    if any(not isinstance(s, (int, float)) or not math.isfinite(s) or not 0 <= s <= 1
-                           for s in scores.values()):
-                        raise ValueError("Invalid character plausibility score")
-                    eligible = dict(scores)
-                    completeness = None
-                    if "END_WORD" in eligible:
-                        completeness = response["answers"]["word_complete"]["noul"]
-                        if not isinstance(completeness, (int, float)) or not math.isfinite(completeness) or not 0 <= completeness <= 1:
-                            raise ValueError("Invalid word completeness score")
-                        if completeness < 0.8:
-                            eligible.pop("END_WORD")
-                    answer = {"choice": max(eligible, key=eligible.get),
-                              "selection_method": "highest_noul_with_word_boundary_gate",
-                              "scores": scores, "word_completeness": completeness}
-            except (GatewayError, ValueError, KeyError, TypeError) as error:
-                reason = "error"
-                error_message = str(error)
-                request_outcome_unknown = isinstance(error, GatewayError) and "outcome unknown" in str(error)
-                record({"event": "error", "message": error_message})
-                break
-            except KeyboardInterrupt:
-                reason = "interrupted"
-                request_outcome_unknown = True
-                break
-            count += 1
-            for name in usage:
-                usage[name] += int(response.get("usage", {}).get(name, 0))
-            gateway = response.get("provider_metadata", {}).get("gateway", {})
-            cost = gateway.get("cost")
-            if cost is None:
-                cost_complete = False
-            else:
-                try:
-                    numeric_cost = float(cost)
-                    if not math.isfinite(numeric_cost) or numeric_cost < 0:
-                        raise ValueError()
-                    known_cost += numeric_cost
-                except (TypeError, ValueError):
-                    cost_complete = False
-            if keyboard:
-                done = keyboard.apply(answer["choice"])
-                draft = keyboard.draft
-            else:
-                draft, done = apply_key(draft, answer["choice"])
-            # A model action may append one character or only change stages.
-            # Whole-word selections and edits are never valid generation steps.
-            if not draft.startswith(before) or len(draft) - len(before) not in (0, 1):
-                raise AssertionError("Generation must append at most one character per action")
-            record({"event": "key", "step": step, "before": before, "after": draft,
-                    "latency_seconds": time.monotonic() - tick, "request": body,
-                    "response": response, "selection": answer})
-            if on_change:
-                on_change(draft, answer["choice"])
-            if done:
-                reason = "done"
-                break
-            state_key = (draft, keyboard.stage) if keyboard else draft
-            visits[state_key] = visits.get(state_key, 0) + 1
-            if visits[state_key] >= 4 or (len(draft) >= 12 and len(set(draft[-12:])) == 1):
-                reason = "repetition"
-                break
-            if keyboard and len(keyboard.completed_words) >= 4:
-                last_words = [w.casefold() for w in keyboard.completed_words[-4:]]
-                if len(set(last_words)) == 1:
-                    reason = "repeated_words"
-                    break
-            if not cost_complete:
-                reason = "cost_metadata_missing"
-                break
-            if known_cost >= max_cost:
-                reason = "cost_limit"
-                break
-        summary = {"event": "summary", "text": draft, "stop_reason": reason,
-                   "mode": mode, "completed_words": keyboard.completed_words if keyboard else None,
-                   "completed": reason == "done", "steps": count,
-                   "elapsed_seconds": time.monotonic() - started, "usage": usage,
-                   "reported_cost_usd": known_cost, "cost_metadata_complete": cost_complete,
-                   "request_outcome_unknown": request_outcome_unknown,
-                   "error": error_message}
-        record(summary)
-    return summary
+def next_action(jev, task, board, min_chars, max_chars):
+    action, probabilities = decide(jev, task, board, min_chars, max_chars)
+    if board.stage != "word" or action == "END_WORD" or probabilities[action] >= .55:
+        return action
+    candidates = sorted(probabilities, key=probabilities.get, reverse=True)[:4]
+
+    def preview(char):
+        trial = board.apply(char)
+        future, _ = decide(jev, task, trial, min_chars, max_chars)
+        return trial.apply(future).draft
+
+    with ThreadPoolExecutor(max_workers=len(candidates)) as pool:
+        previews = list(pool.map(preview, candidates))
+    winner, _ = jev.choose({"task": task, "committed_prefix": board.draft},
+        "Which continuation is most grammatical and relevant to the task?",
+        {str(i): text for i, text in enumerate(previews)})
+    # Commit only the first character; discard the speculative future action.
+    return candidates[int(winner)]
+
+
+def generate(jev, task, min_chars=25, max_chars=50, on_character=lambda char: None):
+    if not 1 <= min_chars <= max_chars:
+        raise ValueError("Require 1 <= min_chars <= max_chars")
+    board = Keyboard()
+    reason = "action_limit"
+    for _ in range(250):
+        if len(board.draft) >= max_chars and board.stage != "route":
+            reason = "character_limit"
+            break
+        action = next_action(jev, task, board, min_chars, max_chars)
+        if action == "DONE":
+            return {"text": board.draft, "completed": True, "reason": "done"}
+        updated = board.apply(action)
+        if len(updated.draft) > max_chars:
+            reason = "character_limit"
+            break
+        assert updated.draft.startswith(board.draft) and len(updated.draft) - len(board.draft) in (0, 1)
+        appended = updated.draft[len(board.draft):]
+        board = updated
+        if appended:
+            on_character(appended)
+        if len(board.draft) >= 12 and len(set(board.draft[-12:])) == 1:
+            reason = "repetition"
+            break
+    return {"text": board.draft, "completed": False, "reason": reason}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("task", help="Task or question for Jev")
-    parser.add_argument("--trace", type=Path,
-                        default=Path("jev-run-" + str(time.time_ns()) + ".jsonl"))
-    parser.add_argument("--max-steps", type=int, default=1500)
-    parser.add_argument("--max-seconds", type=float, default=1800)
-    parser.add_argument("--max-cost", type=float, default=0.25)
-    parser.add_argument("--mode", choices=("word", "character", "scored", "planned", "direct", "boundary"), default="word")
-    parser.add_argument("--show-request", action="store_true", help="Print initial request; no API call")
-    parser.add_argument("--stop-file", type=Path, help="Stop between requests when this file exists")
-    parser.add_argument("--resume-trace", type=Path, help="Continue the exact recorded character sequence")
+    parser.add_argument("question")
+    parser.add_argument("--min-chars", type=int, default=25)
+    parser.add_argument("--max-chars", type=int, default=50)
+    parser.add_argument("--max-cost", type=float, default=.10)
     args = parser.parse_args()
-    if args.show_request:
-        if args.mode == "boundary":
-            from direct_keyboard import BoundaryKeyboard
-            body = BoundaryKeyboard().body(args.task)
-        elif args.mode == "direct":
-            from direct_keyboard import DirectKeyboard
-            body = DirectKeyboard().body(args.task)
-        elif args.mode == "planned":
-            from planned_keyboard import PlannedKeyboard
-            body = PlannedKeyboard().body(args.task)
-        else:
-            body = WordKeyboard().body(args.task) if args.mode in ("word", "scored") else request_body(args.task, "")
-        print(json.dumps(body, indent=2))
-        return 0
-    key = os.environ.get("AI_GATEWAY_API_KEY") or getpass.getpass("AI Gateway key (not saved): ")
-    if not key.strip():
-        parser.error("An API key is required")
-    displayed = ""
-    def display(draft, action):
-        nonlocal displayed
-        sys.stdout.write(draft[len(displayed):])
-        displayed = draft
-        sys.stdout.flush()
-    result = generate(args.task, key, args.trace, max_steps=args.max_steps,
-                      max_seconds=args.max_seconds, max_cost=args.max_cost,
-                      on_change=display, mode=args.mode, stop_file=args.stop_file,
-                      resume_trace=args.resume_trace)
-    print("\n" + json.dumps(result, indent=2), file=sys.stderr)
+    if not 1 <= args.min_chars <= args.max_chars or not math.isfinite(args.max_cost) or args.max_cost <= 0:
+        parser.error("Character limits and max cost must be positive and valid")
+    key = os.environ.get("AI_GATEWAY_API_KEY") or getpass.getpass("AI Gateway key: ")
+    jev = Jev(key, args.max_cost)
+    try:
+        result = generate(jev, args.question, args.min_chars, args.max_chars,
+                          on_character=lambda char: print(char, end="", flush=True))
+    except (RuntimeError, ValueError, KeyError, TypeError, KeyboardInterrupt) as error:
+        print(f"\nStopped: {str(error) or 'interrupted'}", file=sys.stderr)
+        return 1
+    print()
+    print(f"{result['reason']}; {jev.calls} requests; ${jev.cost:.6f} reported cost", file=sys.stderr)
     return 0 if result["completed"] else 1
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())

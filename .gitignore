@@ -5,6 +5,3 @@ __pycache__/
 .env.*
 *.pem
 *.key
-*.zip
-stop-*
-search-*.jsonl
