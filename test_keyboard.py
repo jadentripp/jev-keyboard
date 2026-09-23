@@ -3,7 +3,7 @@ import json
 from unittest.mock import Mock, patch
 import requests
 
-from jev_keyboard import Jev, Keyboard, choice, decide, generate, next_action
+from jev_keyboard import Jev, Keyboard, answer_complete, choice, decide, generate, next_action
 
 
 class KeyboardTests(unittest.TestCase):
@@ -21,15 +21,52 @@ class KeyboardTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 Keyboard(stage="word").apply(action)
 
-    def test_done_requires_length_and_punctuation(self):
+    def test_contraction_keeps_one_apostrophe_and_a_word_boundary(self):
+        board = Keyboard(word="There", stage="word").apply("'").apply("s")
+        self.assertEqual(board.apply("END_WORD").draft, "There's")
+        with self.assertRaises(ValueError):
+            board.apply("'")
+        with self.assertRaises(ValueError):
+            Keyboard(word="There'", stage="word").apply("END_WORD")
+        with self.assertRaises(ValueError):
+            Keyboard(text="There's", stage="punctuation").apply("'")
+        self.assertEqual(Keyboard(text="'There's", stage="punctuation").apply("'").draft,
+                         "'There's'")
+
+    def test_speculative_choices_cannot_finish_the_answer(self):
         class Capture:
             def choose(self, state, prompt, options):
                 self.options = options
                 return next(iter(options)), {}
         model = Capture()
-        for text, allowed in (("", False), ("Hi.", False), ("Text long enough", False), ("Text long enough.", True)):
+        for text in ("", "Hi.", "Text long enough", "Text long enough."):
             decide(model, "A task", Keyboard(text), 10, 50)
-            self.assertEqual("DONE" in model.options, allowed)
+            self.assertNotIn("DONE", model.options)
+
+    def test_stop_checks_fact_format_and_boundary_on_committed_text(self):
+        class Checker:
+            def __init__(self, scores, selection="STOP"):
+                self.scores, self.selection = scores, selection
+                self.calls = 0
+            def ask(self, state, questions):
+                self.calls += 1
+                self.asserted_state = state
+                return {"finish": {"type": "choice", "choice": self.selection,
+                                   "probabilities": {"STOP": 1 if self.selection == "STOP" else 0,
+                                                     "CONTINUE": 1 if self.selection == "CONTINUE" else 0}},
+                        **{key: {"noul": value} for key, value in self.scores.items()}}
+        for scores, expected in (({"fact": .99, "form": .98, "boundary": .99}, True),
+                                 ({"fact": .65, "form": .72, "boundary": .98}, True),
+                                 ({"fact": .59, "form": .99, "boundary": .99}, False),
+                                 ({"fact": .99, "form": .69, "boundary": .99}, False),
+                                 ({"fact": .99, "form": .99, "boundary": .89}, False)):
+            checker = Checker(scores)
+            self.assertEqual(answer_complete(checker, "Give one word", Keyboard("Paris")), expected)
+            self.assertEqual(checker.asserted_state["exact_answer"], "Paris")
+        checker = Checker({"fact": .99, "form": .99, "boundary": .99})
+        for board in (Keyboard(), Keyboard("Paris "), Keyboard(word="Pa", stage="word")):
+            self.assertFalse(answer_complete(checker, "Give one word", board))
+        self.assertEqual(checker.calls, 0)
 
     def test_paragraph_preserves_sentence_spacing_and_excludes_newline(self):
         class Capture:
@@ -139,10 +176,31 @@ class KeyboardTests(unittest.TestCase):
         self.assertEqual(result["reason"], "character_limit")
 
     def test_model_can_finish_at_the_exact_character_limit(self):
-        actions = ["WORD", "H", "i", "END_WORD", "PUNCTUATION", ".", "DONE"]
+        class Checker:
+            def ask(self, state, questions):
+                ready = state["exact_answer"] == "Hi."
+                return {"finish": {"type": "choice", "choice": "STOP" if ready else "CONTINUE",
+                                   "probabilities": {"STOP": 1 if ready else 0,
+                                                     "CONTINUE": 0 if ready else 1}},
+                        **{key: {"noul": 1 if ready else 0}
+                           for key in ("fact", "form", "boundary")}}
+        actions = ["WORD", "H", "i", "END_WORD", "PUNCTUATION", "."]
         with patch("jev_keyboard.next_action", side_effect=actions):
-            result = generate(None, "A task", 1, 3)
+            result = generate(Checker(), "A task", 1, 3)
         self.assertEqual(result, {"text": "Hi.", "completed": True, "reason": "done"})
+
+    def test_model_can_end_short_word_below_default_minimum(self):
+        class Checker:
+            def ask(self, state, questions):
+                self.asserted_text = state["exact_answer"]
+                return {"finish": {"type": "choice", "choice": "STOP",
+                                   "probabilities": {"STOP": 1, "CONTINUE": 0}},
+                        **{key: {"noul": .99} for key in ("fact", "form", "boundary")}}
+        model = Checker()
+        self.assertEqual(generate(model, "Capital? One word.", 25, 50,
+                                  initial_board=Keyboard("Paris")),
+                         {"text": "Paris", "completed": True, "reason": "done"})
+        self.assertEqual(model.asserted_text, "Paris")
 
     def test_malformed_model_probabilities_are_rejected(self):
         for probabilities in ({"a": float("nan"), "b": 0}, {"a": .1, "b": .9}, {"a": .4, "b": .4}):
@@ -154,10 +212,18 @@ class KeyboardTests(unittest.TestCase):
         self.assertEqual(choice(answer, {"a": None, "b": None})[0], "a")
 
     def test_resume_preserves_the_existing_prefix(self):
+        class Checker:
+            def ask(self, state, questions):
+                ready = state["exact_answer"] == "Existing."
+                return {"finish": {"type": "choice", "choice": "STOP" if ready else "CONTINUE",
+                                   "probabilities": {"STOP": 1 if ready else 0,
+                                                     "CONTINUE": 0 if ready else 1}},
+                        **{key: {"noul": 1 if ready else 0}
+                           for key in ("fact", "form", "boundary")}}
         emitted = []
         board = Keyboard(text="Existing", stage="punctuation")
-        with patch("jev_keyboard.next_action", side_effect=[".", "DONE"]):
-            result = generate(None, "A task", 1, 20, emitted.append, board)
+        with patch("jev_keyboard.next_action", side_effect=["."]):
+            result = generate(Checker(), "A task", 1, 20, emitted.append, board)
         self.assertEqual(result['text'], "Existing.")
         self.assertEqual(emitted, ["."])
 

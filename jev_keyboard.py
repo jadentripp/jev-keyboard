@@ -22,6 +22,18 @@ CHARACTERS = LETTERS + LETTERS.upper() + string.digits + "'"
 PUNCTUATION = "`~!@#$%^&*()-_=+[{]}\\|;:'\",<.>/?"
 
 
+def valid_word_char(word, char):
+    if char == "'":
+        return bool(word and word[-1].isalpha() and "'" not in word)
+    return char in CHARACTERS
+
+
+def valid_punctuation(text, mark):
+    token = re.search(r"\S+$", text)
+    return mark != "'" or not (token and "'" in token.group() and
+                                  not token.group().startswith("'"))
+
+
 def probability(value):
     if not isinstance(value, (int, float)) or not math.isfinite(value) or not 0 <= value <= 1:
         raise ValueError("Invalid model probability")
@@ -99,14 +111,15 @@ class Keyboard:
 
     def apply(self, action):
         if self.stage == "word":
-            if action == "END_WORD" and self.word:
+            if action == "END_WORD" and self.word and self.word[-1] != "'":
                 return Keyboard(self.draft)
-            if len(action) == 1 and action in CHARACTERS:
+            if len(action) == 1 and valid_word_char(self.word, action):
                 return replace(self, word=self.word + action)
         elif self.stage in ("punctuation", "ending"):
             if self.stage == "ending" and action not in (".", "!", "?"):
                 raise ValueError("Invalid sentence ending")
-            if action == "ENTER" or (len(action) == 1 and action in PUNCTUATION):
+            if action == "ENTER" or (len(action) == 1 and action in PUNCTUATION
+                                     and valid_punctuation(self.text, action)):
                 return Keyboard(self.text + ("\n" if action == "ENTER" else action))
         elif self.stage == "route":
             if action == "SPACE":
@@ -134,8 +147,7 @@ def decide(jev, task, board, min_chars, max_chars):
             if complete >= .9 and grammar >= .8:
                 return "END_SENTENCE", {"END_SENTENCE": complete}
         options = {"WORD": "Start spelling the next word.", "SPACE": "Append one space.",
-                   "PUNCTUATION": "Select a punctuation character.",
-                   "DONE": "The response fully satisfies the task, including its requested format."}
+                   "PUNCTUATION": "Select a punctuation character."}
         if not board.text or board.text[-1].isspace():
             options.pop("SPACE")
         if paragraph and board.text.endswith((".", "!", "?")):
@@ -143,9 +155,6 @@ def decide(jev, task, board, min_chars, max_chars):
         if board.text and (board.text[-1].isalnum() or
                            (getattr(jev, "paragraph", False) and board.text[-1] in ".!?,;:")):
             options.pop("WORD")
-        if (len(board.text) < min_chars or (paragraph and sentence_count < 3)
-                or not board.text.rstrip().rstrip('\"\u201d\u2019)').endswith((".", "!", "?"))):
-            options.pop("DONE")
         state = {"task": task, "text": board.text,
                  "length_requirement": {"min_characters": min_chars, "max_characters": max_chars}}
         if paragraph:
@@ -153,7 +162,9 @@ def decide(jev, task, board, min_chars, max_chars):
         prompt = "Continue this paragraph." if getattr(jev, "paragraph", False) else "Continue this sentence."
         return jev.choose(state, prompt, options)
     if board.stage in ("punctuation", "ending"):
-        options = dict.fromkeys(".!?" if board.stage == "ending" else PUNCTUATION)
+        options = dict.fromkeys(".!?" if board.stage == "ending" else
+                                (mark for mark in PUNCTUATION
+                                 if valid_punctuation(board.text, mark)))
         if getattr(jev, "paragraph", False) and board.stage == "punctuation":
             for mark in ".!?":
                 options.pop(mark)
@@ -181,7 +192,8 @@ def decide(jev, task, board, min_chars, max_chars):
     word_complete = min(probability(answers[k]["noul"]) for k in questions) if board.word else None
     kind, _ = jev.choose(state, "What kind of character comes next in the answer?", kinds)
     matches = {"lower": str.islower, "upper": str.isupper, "digit": str.isdigit}[kind]
-    characters = {f"key_{i}": char for i, char in enumerate(CHARACTERS) if matches(char) or char == "'"}
+    characters = {f"key_{i}": char for i, char in enumerate(CHARACTERS)
+                  if (matches(char) or char == "'") and valid_word_char(board.word, char)}
     questions = {}
     for key, char in characters.items():
         prefix = json.dumps(board.word + char)
@@ -195,7 +207,7 @@ def decide(jev, task, board, min_chars, max_chars):
         raise ValueError("Invalid character scores")
     scores = {char: min(probability(answers[k]["noul"]) for k in (key, key + "_spelling"))
               for key, char in characters.items()}
-    if word_complete is not None:
+    if word_complete is not None and board.word[-1] != "'":
         scores["END_WORD"] = word_complete
     return max(scores, key=scores.get), scores
 
@@ -203,8 +215,6 @@ def decide(jev, task, board, min_chars, max_chars):
 def next_action(jev, task, board, min_chars, max_chars):
     action, probabilities = decide(jev, task, board, min_chars, max_chars)
     sentence_start = len(board.draft) - len(re.split(r"(?<=[.!?])\s+", board.draft)[-1])
-    if action == "DONE":
-        return action
     def proposals(scores, width):
         threshold = max(scores.values()) * .5
         return [key for key in sorted(scores, key=scores.get, reverse=True)[:width]
@@ -215,8 +225,6 @@ def next_action(jev, task, board, min_chars, max_chars):
     def expand(item):
         root, trial, strength = item
         future, scores = decide(jev, task, trial, min_chars, max_chars)
-        if future == "DONE":
-            return [(root, trial, min(strength, scores[future]))]
         futures = proposals(scores, 4 if trial.stage == "word" else 2)
         results = []
         for action in futures:
@@ -255,6 +263,31 @@ def next_action(jev, task, board, min_chars, max_chars):
     return selected
 
 
+def answer_complete(jev, task, board):
+    """Ask for END only on the committed text, never a speculative preview."""
+    if board.stage != "route" or not board.text or board.text[-1].isspace():
+        return False
+    if getattr(jev, "paragraph", False) and len(re.findall(r"[.!?](?=\s|$)", board.text)) < 3:
+        return False
+    options = {"STOP": "The answer is correct and complete as written.",
+               "CONTINUE": "The answer still needs a letter, fact, or sentence."}
+    answers = jev.ask({"user_question": task, "exact_answer": board.text}, {
+        "finish": {"type": "choice", "instructions":
+            "Should exact_answer end now? Include the form requested in user_question.",
+            "criteria": options},
+        "fact": {"type": "noul", "instructions":
+            "Does exact_answer fully and factually answer user_question as written?"},
+        "form": {"type": "noul", "instructions":
+            "Does exact_answer satisfy the form requested in user_question?"},
+        "boundary": {"type": "noul", "instructions":
+            "Does exact_answer end on a complete, correctly spelled word, number, or punctuation mark?"},
+    })
+    selected, _ = choice(answers["finish"], options)
+    thresholds = {"fact": .60, "form": .70, "boundary": .90}
+    return selected == "STOP" and all(probability(answers[key]["noul"]) >= minimum
+                                      for key, minimum in thresholds.items())
+
+
 def generate(jev, task, min_chars=25, max_chars=50, on_character=lambda char: None, initial_board=None):
     if not 1 <= min_chars <= max_chars:
         raise ValueError("Require 1 <= min_chars <= max_chars")
@@ -263,12 +296,12 @@ def generate(jev, task, min_chars=25, max_chars=50, on_character=lambda char: No
     board = initial_board or Keyboard()
     reason = "action_limit"
     for _ in range(max(250, max_chars * 4)):
+        if jev is not None and answer_complete(jev, task, board):
+            return {"text": board.draft, "completed": True, "reason": "done"}
         if len(board.draft) >= max_chars and board.stage != "route":
             reason = "character_limit"
             break
         action = next_action(jev, task, board, min_chars, max_chars)
-        if action == "DONE":
-            return {"text": board.draft, "completed": True, "reason": "done"}
         updated = board.apply(action)
         if len(updated.draft) > max_chars:
             reason = "character_limit"
