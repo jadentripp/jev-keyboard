@@ -20,6 +20,24 @@ WORKERS = 8
 LETTERS = "qwertyuiopasdfghjklzxcvbnm"
 CHARACTERS = LETTERS + LETTERS.upper() + string.digits + "'"
 PUNCTUATION = "`~!@#$%^&*()-_=+[{]}\\|;:'\",<.>/?"
+SENTENCE_COUNTS = {word: number for number, word in enumerate(
+    ("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"), 1)}
+SENTENCE_COUNT_REQUEST = re.compile(
+    r"(?:\b(?:in|paragraph\s+of)\s+|"
+    r"(?:^|(?<=[.!?])\s+)(?:please\s+)?"
+    r"(?:write|use|give|provide|produce|answer\s+(?:in|with)|respond\s+(?:in|with))\s+)"
+    r"(?:(?:exactly|at\s+least)\s+)?"
+    r"(?P<count>\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+"
+    r"(?:(?:short|simple|brief|complete|clear|grammatical)\s+){0,3}sentences?\b",
+    re.IGNORECASE)
+
+
+def requested_sentence_minimum(task):
+    matches = list(SENTENCE_COUNT_REQUEST.finditer(task))
+    if not matches:
+        return 0
+    count = matches[-1].group("count").lower()
+    return SENTENCE_COUNTS.get(count, int(count) if count.isdigit() else 0)
 
 
 def valid_word_char(word, char):
@@ -138,16 +156,18 @@ def decide(jev, task, board, min_chars, max_chars):
         paragraph = getattr(jev, "paragraph", False)
         sentence = re.split(r"(?<=[.!?])\s+", board.text)[-1]
         sentence_count = len(re.findall(r"[.!?](?=\s|$)", board.text))
+        sentence_end_eligible = False
         if paragraph and len(sentence.split()) >= 3 and board.text[-1].isalnum():
             checks = jev.ask({"sentence": sentence}, {
                 "complete": {"type": "noul", "instructions": "Is the sentence a complete sentence, with a subject and a verb?"},
                 "grammar": {"type": "noul", "instructions": "Is the sentence grammatically acceptable English?"}})
             complete = probability(checks["complete"]["noul"])
             grammar = probability(checks["grammar"]["noul"])
-            if complete >= .9 and grammar >= .8:
-                return "END_SENTENCE", {"END_SENTENCE": complete}
+            sentence_end_eligible = complete >= .9 and grammar >= .8
         options = {"WORD": "Start spelling the next word.", "SPACE": "Append one space.",
                    "PUNCTUATION": "Select a punctuation character."}
+        if sentence_end_eligible:
+            options["END_SENTENCE"] = "End this complete sentence with a punctuation mark."
         if not board.text or board.text[-1].isspace():
             options.pop("SPACE")
         if paragraph and board.text.endswith((".", "!", "?")):
@@ -159,7 +179,9 @@ def decide(jev, task, board, min_chars, max_chars):
                  "length_requirement": {"min_characters": min_chars, "max_characters": max_chars}}
         if paragraph:
             state["completed_sentences"] = sentence_count
-        prompt = "Continue this paragraph." if getattr(jev, "paragraph", False) else "Continue this sentence."
+        prompt = ("Continue this paragraph. Decide whether the current sentence should end now "
+                  "based on the task, requested form, and length."
+                  if paragraph else "Continue this sentence.")
         return jev.choose(state, prompt, options)
     if board.stage in ("punctuation", "ending"):
         options = dict.fromkeys(".!?" if board.stage == "ending" else
@@ -267,7 +289,7 @@ def answer_complete(jev, task, board):
     """Ask for END only on the committed text, never a speculative preview."""
     if board.stage != "route" or not board.text or board.text[-1].isspace():
         return False
-    if getattr(jev, "paragraph", False) and len(re.findall(r"[.!?](?=\s|$)", board.text)) < 3:
+    if len(re.findall(r"[.!?](?=\s|$)", board.text)) < requested_sentence_minimum(task):
         return False
     options = {"STOP": "The answer is correct and complete as written.",
                "CONTINUE": "The answer still needs a letter, fact, or sentence."}

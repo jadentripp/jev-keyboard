@@ -68,6 +68,47 @@ class KeyboardTests(unittest.TestCase):
             self.assertFalse(answer_complete(checker, "Give one word", board))
         self.assertEqual(checker.calls, 0)
 
+    def test_paragraph_can_stop_after_one_sentence_when_requested_form_is_satisfied(self):
+        class Checker:
+            paragraph = True
+            def ask(self, state, questions):
+                self.state, self.questions = state, questions
+                return {"finish": {"type": "choice", "choice": "STOP",
+                                   "probabilities": {"STOP": 1, "CONTINUE": 0}},
+                        **{key: {"noul": .99} for key in ("fact", "form", "boundary")}}
+        checker = Checker()
+        self.assertTrue(answer_complete(checker, "Write one paragraph.",
+                                        Keyboard("This sentence is complete.")))
+        self.assertEqual(checker.state["exact_answer"], "This sentence is complete.")
+        self.assertIn("form", checker.questions)
+
+    def test_explicit_sentence_count_is_a_stop_lower_bound(self):
+        class Checker:
+            paragraph = True
+            def __init__(self):
+                self.calls = 0
+            def ask(self, state, questions):
+                self.calls += 1
+                return {"finish": {"type": "choice", "choice": "STOP",
+                                   "probabilities": {"STOP": 1, "CONTINUE": 0}},
+                        **{key: {"noul": .99} for key in ("fact", "form", "boundary")}}
+        for task, text, expected in (
+            ("Write one sentence.", "x.", True),
+            ("Write two simple sentences.", "x.", False),
+            ("Write 2 complete sentences.", "x. y.", True),
+            ("Answer with two sentences.", "x.", False),
+            ("Answer with two sentences.", "x. y.", True),
+            ("Describe a scene in three short sentences.", "x. y.", False),
+            ("Describe a scene in three short sentences.", "x. y. z.", True),
+            ("Write one paragraph.", "x.", True),
+            ("Write at most three short sentences.", "x.", True),
+            ("Why write three sentences?", "x.", True),
+        ):
+            with self.subTest(task=task, text=text):
+                checker = Checker()
+                self.assertEqual(answer_complete(checker, task, Keyboard(text)), expected)
+                self.assertEqual(checker.calls, int(expected))
+
     def test_paragraph_preserves_sentence_spacing_and_excludes_newline(self):
         class Capture:
             paragraph = True
@@ -86,18 +127,28 @@ class KeyboardTests(unittest.TestCase):
     def test_sentence_ending_checks_completeness_and_grammar_without_task(self):
         class Checker:
             paragraph = True
-            def __init__(self, grammar, complete=.99):
+            def __init__(self, grammar, complete=.99, selected="SPACE"):
                 self.grammar = grammar
                 self.complete = complete
+                self.selected = selected
             def ask(self, state, questions):
                 assert set(state) == {"sentence"}
                 return {"complete": {"noul": self.complete}, "grammar": {"noul": self.grammar}}
             def choose(self, state, prompt, options):
-                return "SPACE", {"SPACE": 1}
+                self.state, self.prompt, self.options = state, prompt, options
+                return self.selected, {self.selected: 1}
         board = Keyboard("A complete statement of sufficient length")
-        self.assertEqual(decide(Checker(.2), "A task", board, 75, 250)[0], "SPACE")
-        self.assertEqual(decide(Checker(.99, .2), "A task", board, 75, 250)[0], "SPACE")
-        action = decide(Checker(.95), "A task", board, 75, 250)[0]
+        for checker in (Checker(.2), Checker(.99, .2)):
+            self.assertEqual(decide(checker, "A task", board, 75, 250)[0], "SPACE")
+            self.assertNotIn("END_SENTENCE", checker.options)
+        checker = Checker(.95)
+        self.assertEqual(decide(checker, "A task", board, 75, 250)[0], "SPACE")
+        self.assertIn("END_SENTENCE", checker.options)
+        self.assertEqual(checker.state["task"], "A task")
+        self.assertEqual(checker.state["length_requirement"],
+                         {"min_characters": 75, "max_characters": 250})
+        self.assertIn("requested form", checker.prompt)
+        action = decide(Checker(.95, selected="END_SENTENCE"), "A task", board, 75, 250)[0]
         self.assertEqual(action, "END_SENTENCE")
         ending = board.apply(action)
         self.assertEqual(ending.draft, board.draft)
