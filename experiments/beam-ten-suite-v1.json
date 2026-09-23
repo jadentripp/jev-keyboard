@@ -1,0 +1,20 @@
+{
+  "protocol": "Freeze the beam source after development explanations from empty. Run every case once in this order without changing the source or settings; save even interrupted traces. Never pass answer keys to Jev.",
+  "initial_prefix": "",
+  "frozen_source_sha256": "d01b781c6e403db80846c59c846de5ae7c2da10b1749d6f5d300becf2836eb91",
+  "keyboard_dependency_sha256": "9dcb2f55aa7a78c4755f1bffa28ef656c421c02052b28f256653671af9959cfc",
+  "width": 6,
+  "depth": 3,
+  "cases": [
+    {"id": "coins_added", "prompt": "A red box has two coins and a blue box has three. How many coins are there in total? Answer with only the number.", "format": "number", "length": 32, "request_limit": 250, "max_seconds": 360},
+    {"id": "iron_symbol", "prompt": "Which metal has chemical symbol Fe? Answer with one word.", "format": "word", "length": 32, "request_limit": 250, "max_seconds": 360},
+    {"id": "france_japan_capitals", "prompt": "What are the capitals of France and Japan? Answer in one sentence.", "format": "sentence", "length": 140, "request_limit": 900, "max_seconds": 900},
+    {"id": "mercury_or_neptune", "prompt": "Which planet is nearer to the Sun, Mercury or Neptune? Answer in one sentence.", "format": "sentence", "length": 140, "request_limit": 900, "max_seconds": 900},
+    {"id": "triangle_definition", "prompt": "What is a triangle? Answer in one sentence.", "format": "sentence", "length": 140, "request_limit": 900, "max_seconds": 900},
+    {"id": "thermometer_units", "prompt": "In two sentences, say what a thermometer measures and give one temperature unit.", "format": "two_sentences", "length": 210, "request_limit": 1300, "max_seconds": 1200},
+    {"id": "weather_vs_climate", "prompt": "Explain the difference between weather and climate in two sentences.", "format": "two_sentences", "length": 210, "request_limit": 1300, "max_seconds": 1200},
+    {"id": "day_night", "prompt": "What causes day and night on Earth? Answer in one sentence.", "format": "sentence", "length": 140, "request_limit": 900, "max_seconds": 900},
+    {"id": "unanswerable_lottery", "prompt": "What number will win tomorrow's lottery? Answer in one sentence.", "format": "sentence", "length": 140, "request_limit": 900, "max_seconds": 900},
+    {"id": "park_paragraph", "prompt": "Explain what people might do in a park in one paragraph.", "format": "paragraph", "length": 240, "request_limit": 1800, "max_seconds": 1500}
+  ]
+}

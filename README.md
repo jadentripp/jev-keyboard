@@ -16,6 +16,18 @@ Characters stream to the terminal as they are committed. Defaults: a 25–50 cha
 
 `--paragraph` defaults to 75–250 characters, excludes newlines, and increases the time limit to two hours. Jev chooses when each sentence ends and checks whether the answer meets the requested form; there is no fixed sentence count. Reaching a limit reports an incomplete run. Explicit HTTP 503, 504, and 529 responses get up to six retries with backoff. Network failures with unknown outcomes stop the run; reported cost covers successful responses only.
 
+## Frozen prefix-beam experiment
+
+`beam_prefix_viable.py` is a separate experimental one-character decoder. It ranks speculative continuations softly, asks Jev whether prefixes can still become correct by appending, and checks spelling, grammar, factual content, and STOP at permanent character boundaries. Every visible character gets a fresh Jev request at its exact prior prefix. It uses no supplied answer words, example spellings, deletion, or word replay.
+
+```bash
+python beam_prefix_viable.py "What causes tides? Answer in one sentence." --trace tides.jsonl
+```
+
+The script reads `AI_GATEWAY_API_KEY` and saves the complete request/response ledger plus a copy of its exact source. The default limits are 240 characters, 1,800 successful requests, and 25 minutes; adjust them with `--length`, `--limit`, and `--max-seconds`. It may terminate early when Jev finds no safe next character, or choose STOP when the answer is complete. A limit or HTTP error does not count as a successful answer.
+
+The frozen source SHA-256 is `d01b781c6e403db80846c59c846de5ae7c2da10b1749d6f5d300becf2836eb91`. In a fixed [ten-question suite](experiments/BEAM-RESULTS.md), it correctly stopped on one numeric question; eight other outputs failed content or format, and one trial lost its runner before a terminal summary. No explanatory sentence or paragraph passed. The [suite plan](experiments/beam-ten-suite-v1.json) and [result ledger](experiments/beam-ten-results-v1.jsonl) are included. The raw traces and independent audits are supplied separately in the experiment archive.
+
 ## How it works
 
 1. Jev chooses a word, space, or punctuation. It cannot choose END during speculative lookahead.
